@@ -1,21 +1,27 @@
 :root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
   font-weight: 400;
   color-scheme: light;
-  --text: #1a1f26;
-  --muted: #5c6570;
-  --border: #e8eaee;
+
+  /* Palette Natural Beauty */
+  --brand: #4a5d4e;        /* Verde Salvia scuro */
+  --brand-light: #8ba88e;  /* Verde Salvia chiaro */
+  --accent: #d4a373;       /* Oro opaco / Terra */
+  --text: #2d3436;         /* Antracite morbido */
+  --muted: #636e72;        /* Grigio fumo */
+  --border: #e0e0e0;
   --card: #ffffff;
-  --bg: #f6f4f1;
-  --code-bg: rgba(0, 0, 0, 0.06);
-  --focus: #1b6ef3;
-  --danger: #b42318;
+  --bg: #fcfaf7;           /* Crema chiarissimo */
+  --danger: #d63031;
+
+  /* Ombre e Bordi */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.05);
+  --radius: 12px;
 }
 
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -25,8 +31,17 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(139, 168, 142, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(212, 163, 115, 0.05) 0px, transparent 50%);
 }
 
 #root {
   min-height: 100vh;
+}
+
+h1, h2, h3 {
+  font-family: 'Georgia', serif;
+  font-weight: 500;
+  margin: 0;
 }

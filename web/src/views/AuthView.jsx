@@ -73,12 +73,11 @@ export default function AuthView() {
           <RegisterForm onSubmit={handleRegister} loading={loading} error={mode === 'register' ? error : null} />
         )}
 
-        <p className="muted login__hint">
-          {mode === 'login' 
-            ? <>Credenziali di sviluppo da <code>application.properties</code> (<code>app.security.bootstrap.*</code>).</>
-            : <>Il nuovo account viene creato con ruolo <code>CLIENTE</code>.</>
-          }
-        </p>
+        {mode === 'register' && (
+          <p className="muted login__hint">
+            Il nuovo account viene creato con ruolo <code>CLIENTE</code>.
+          </p>
+        )}
       </div>
     </div>
   )
