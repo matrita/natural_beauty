@@ -125,6 +125,60 @@
   outline-offset: 2px;
 }
 
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(20, 24, 32, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+}
+
+.modal__dialog {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.modal__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.modal__message {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.modal__message strong {
+  color: var(--text);
+}
+
+.modal__details {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.modal__details li {
+  margin: 0.15rem 0;
+}
+
+.modal__actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.modal__actions .btn {
+  border-color: #111;
+}
+
+.modal__actions .btn:hover {
+  border-color: #111;
+}
+
 .eyebrow {
   font-size: 0.75rem;
   letter-spacing: 0.12em;
@@ -405,6 +459,17 @@
 
 .btn--danger:hover {
   background: #fdf5f4;
+}
+
+.btn--danger-solid {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn--danger-solid:hover {
+  background: #8f1e15;
+  border-color: #8f1e15;
 }
 
 .alert {

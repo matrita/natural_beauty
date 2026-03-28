@@ -84,10 +84,6 @@ export default function TrattamentiView() {
 
   return (
     <div className="view">
-      <p className="view__hint">
-        Modulo <code>trattamentiApi.js</code> → <code>/api/trattamenti</code>
-      </p>
-
       {!isCliente && (
         <label className="inline-check">
           <input type="checkbox" checked={soloAttivi} onChange={(e) => setSoloAttivi(e.target.checked)} />

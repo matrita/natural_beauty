@@ -42,7 +42,9 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/api/me/**")
                                         .hasRole("CLIENTE")
-                                        .requestMatchers(HttpMethod.GET, "/api/appuntamenti/disponibilita")
+                                        // Note: method-specific matcher can be brittle depending on matcher type,
+                                        // keep it path-based so CLIENTE can always access availability.
+                                        .requestMatchers("/api/appuntamenti/disponibilita")
                                         .authenticated()
                                         .requestMatchers("/api/utenti/**")
                                         .hasRole("ADMIN")

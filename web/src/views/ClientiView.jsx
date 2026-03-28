@@ -90,10 +90,6 @@ export default function ClientiView() {
 
   return (
     <div className="view">
-      <p className="view__hint">
-        Modulo collegato a <code>clientiApi.js</code> → <code>/api/clienti</code>
-      </p>
-
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       <form className="form-grid" onSubmit={handleSubmit}>

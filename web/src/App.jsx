@@ -60,10 +60,6 @@ export default function App() {
             </button>
           </div>
         </div>
-        <p className="lede">
-          Pannello collegato al backend Spring. Token JWT inviato automaticamente sulle richieste{' '}
-          <code>/api</code>.
-        </p>
       </header>
 
       <nav className="tabs" aria-label="Sezioni applicazione">

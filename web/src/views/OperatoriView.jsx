@@ -79,10 +79,6 @@ export default function OperatoriView() {
 
   return (
     <div className="view">
-      <p className="view__hint">
-        Modulo <code>operatoriApi.js</code> → <code>/api/operatori</code>
-      </p>
-
       <label className="inline-check">
         <input type="checkbox" checked={soloAttivi} onChange={(e) => setSoloAttivi(e.target.checked)} />
         Mostra solo operatori attivi (filtro GET)

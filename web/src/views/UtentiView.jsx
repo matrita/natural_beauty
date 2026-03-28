@@ -85,10 +85,6 @@ export default function UtentiView() {
 
   return (
     <div className="view">
-      <p className="view__hint">
-        Sezione riservata ad <code>ADMIN</code>. API <code>/api/utenti</code>.
-      </p>
-
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       <form className="form-grid" onSubmit={handleCreate}>

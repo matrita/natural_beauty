@@ -6,6 +6,7 @@ import * as trattamentiApi from '../api/trattamentiApi'
 import { addDays, startOfDay, toDateTimeLocalValue } from '../lib/dateUtils'
 import ErrorAlert from '../ui/ErrorAlert'
 import { useAuth } from '../context/AuthContext'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 const STATI = ['PRENOTATO', 'CONFERMATO', 'COMPLETATO', 'CANCELLATO']
 
@@ -127,10 +128,6 @@ function StaffAppuntamentiView() {
 
   return (
     <div className="view">
-      <p className="view__hint">
-        Modulo <code>appuntamentiApi.js</code> → <code>/api/appuntamenti</code> (usa anche altri API per le tendine)
-      </p>
-
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       <div className="panel panel--inner filter-bar">
@@ -277,6 +274,7 @@ function ClienteAppuntamentiView() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [loadingSlots, setLoadingSlots] = useState(false)
+  const [confirmCancelId, setConfirmCancelId] = useState(null)
 
   const [form, setForm] = useState({
     operatoreId: '',
@@ -343,6 +341,7 @@ function ClienteAppuntamentiView() {
         aIso,
         15,
       )
+      console.log('disponibilita', { count: Array.isArray(data) ? data.length : null, data })
       setSlots(data)
       setForm((f) => ({ ...f, slot: data[0] ? normalizeForInput(String(data[0])) : '' }))
     } catch (e) {
@@ -375,11 +374,13 @@ function ClienteAppuntamentiView() {
   }
 
   async function handleCancella(id) {
-    if (!window.confirm('Cancellare questo appuntamento?')) return
     setError(null)
     try {
       await appuntamentiApi.cancellaMioAppuntamento(id)
       await loadMiei()
+      if (form.operatoreId && form.trattamentoId) {
+        await handleCercaDisponibilita()
+      }
     } catch (e) {
       setError(e)
     }
@@ -391,12 +392,47 @@ function ClienteAppuntamentiView() {
     return s.length >= 16 ? s.slice(0, 16) : s
   }
 
+  const apToCancel = confirmCancelId != null ? items.find((x) => x.id === confirmCancelId) : null
+
   return (
     <div className="view">
-      <p className="view__hint">
-        Area cliente: trattamenti attivi, disponibilita e prenotazione.
-      </p>
-
+      <ConfirmDialog
+        open={confirmCancelId != null}
+        title="Confermi la cancellazione?"
+        message={
+          apToCancel ? (
+            <>
+              <div>
+                Stai per cancellare questo appuntamento:
+                <ul className="modal__details">
+                  <li>
+                    <strong>Quando:</strong> {normalizeForInput(apToCancel.dataOraInizio)}
+                  </li>
+                  <li>
+                    <strong>Trattamento:</strong> {apToCancel.trattamentoNome} ({apToCancel.trattamentoDurataMinuti}{' '}
+                    min)
+                  </li>
+                  <li>
+                    <strong>Operatore:</strong> {apToCancel.operatoreNomeCompleto}
+                  </li>
+                </ul>
+              </div>
+              <div>Verrà contrassegnato come cancellato.</div>
+            </>
+          ) : (
+            "L'appuntamento verrà contrassegnato come cancellato."
+          )
+        }
+        confirmLabel="Si, cancella"
+        cancelLabel="No"
+        danger
+        onCancel={() => setConfirmCancelId(null)}
+        onConfirm={async () => {
+          const id = confirmCancelId
+          setConfirmCancelId(null)
+          if (id != null) await handleCancella(id)
+        }}
+      />
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       <div className="panel panel--inner filter-bar">
@@ -470,6 +506,7 @@ function ClienteAppuntamentiView() {
             ))}
           </select>
         </label>
+        <p className="muted">Disponibilita trovate: {slots.length}</p>
         <label className="field field--full">
           <span>Note</span>
           <textarea value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} rows={2} />
@@ -498,7 +535,11 @@ function ClienteAppuntamentiView() {
                   </span>
                 </div>
                 <div className="app-row__controls">
-                  <button type="button" className="btn btn--small btn--danger" onClick={() => handleCancella(ap.id)}>
+                  <button
+                    type="button"
+                    className="btn btn--small btn--danger"
+                    onClick={() => setConfirmCancelId(ap.id)}
+                  >
                     Cancella
                   </button>
                 </div>

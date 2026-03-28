@@ -30,6 +30,7 @@ public interface AppuntamentoRepository extends JpaRepository<Appuntamento, Long
             join fetch a.cliente join fetch a.operatore join fetch a.trattamento
             where a.cliente.id = :clienteId
               and a.dataOraInizio between :inizio and :fine
+              and a.stato <> com.example.natural_beauty.model.StatoAppuntamento.CANCELLATO
             order by a.dataOraInizio asc
             """)
     List<Appuntamento> findByClienteIdNelPeriodoWithDetails(
