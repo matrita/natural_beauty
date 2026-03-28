@@ -1,12 +1,15 @@
+import { useState } from 'react'
 import * as utentiApi from '../api/utentiApi'
 import ErrorAlert from '../ui/ErrorAlert'
 import UtenteForm from './utenti/UtenteForm'
+import PasswordDialog from '../ui/PasswordDialog'
 import { useFetch } from '../lib/useFetch'
 
 const RUOLI_ALL = ['CLIENTE', 'STAFF', 'ADMIN']
 
 export default function UtentiView() {
   const { data: items, loading, error, setError, execute: load } = useFetch(utentiApi.listUtenti)
+  const [resetPasswordFor, setResetPasswordFor] = useState(null) // Contiene l'oggetto utente selezionato
 
   async function handleCreate(formData) {
     setError(null)
@@ -30,12 +33,12 @@ export default function UtentiView() {
     }
   }
 
-  async function handleResetPassword(id) {
-    const pwd = window.prompt('Nuova password (min 4 caratteri):')
-    if (!pwd) return
+  async function handleConfirmResetPassword(newPassword) {
+    if (!resetPasswordFor) return
     setError(null)
     try {
-      await utentiApi.updatePasswordUtente(id, pwd)
+      await utentiApi.updatePasswordUtente(resetPasswordFor.id, newPassword)
+      setResetPasswordFor(null)
       await load()
     } catch (e) {
       setError(e)
@@ -56,6 +59,13 @@ export default function UtentiView() {
   return (
     <div className="view">
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
+
+      <PasswordDialog
+        open={!!resetPasswordFor}
+        email={resetPasswordFor?.email}
+        onCancel={() => setResetPasswordFor(null)}
+        onConfirm={handleConfirmResetPassword}
+      />
 
       <UtenteForm onSubmit={handleCreate} />
 
@@ -85,7 +95,7 @@ export default function UtentiView() {
                   </span>
                 </div>
                 <div className="list-row__actions">
-                  <button type="button" className="btn btn--small" onClick={() => handleResetPassword(u.id)}>
+                  <button type="button" className="btn btn--small" onClick={() => setResetPasswordFor(u)}>
                     Password
                   </button>
                   <button type="button" className="btn btn--small btn--danger" onClick={() => handleDelete(u.id)}>

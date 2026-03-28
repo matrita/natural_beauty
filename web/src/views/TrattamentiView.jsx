@@ -3,6 +3,7 @@ import * as trattamentiApi from '../api/trattamentiApi'
 import ErrorAlert from '../ui/ErrorAlert'
 import { useAuth } from '../context/AuthContext'
 import TrattamentoForm from './trattamenti/TrattamentoForm'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 export default function TrattamentiView() {
   const { user } = useAuth()
@@ -12,6 +13,7 @@ export default function TrattamentiView() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editingItem, setEditingItem] = useState(null)
+  const [itemToDelete, setItemToDelete] = useState(null)
 
   const load = useCallback(async () => {
     setError(null)
@@ -45,12 +47,13 @@ export default function TrattamentiView() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Eliminare questo trattamento?')) return
+  async function confirmDelete() {
+    if (!itemToDelete) return
     setError(null)
     try {
-      await trattamentiApi.deleteTrattamento(id)
-      if (editingItem?.id === id) setEditingItem(null)
+      await trattamentiApi.deleteTrattamento(itemToDelete.id)
+      if (editingItem?.id === itemToDelete.id) setEditingItem(null)
+      setItemToDelete(null)
       await load()
     } catch (e) {
       setError(e)
@@ -59,6 +62,17 @@ export default function TrattamentiView() {
 
   return (
     <div className="view">
+      <ConfirmDialog
+        open={!!itemToDelete}
+        title="Eliminare trattamento?"
+        message={`Sei sicuro di voler eliminare definitivamente il trattamento "${itemToDelete?.nome}"?`}
+        confirmLabel="Si, elimina"
+        cancelLabel="No"
+        danger
+        onCancel={() => setItemToDelete(null)}
+        onConfirm={confirmDelete}
+      />
+
       {!isCliente && (
         <label className="inline-check">
           <input type="checkbox" checked={soloAttivi} onChange={(e) => setSoloAttivi(e.target.checked)} />
@@ -99,7 +113,7 @@ export default function TrattamentiView() {
                     <button type="button" className="btn btn--small" onClick={() => setEditingItem(t)}>
                       Modifica
                     </button>
-                    <button type="button" className="btn btn--small btn--danger" onClick={() => handleDelete(t.id)}>
+                    <button type="button" className="btn btn--small btn--danger" onClick={() => setItemToDelete(t)}>
                       Elimina
                     </button>
                   </div>

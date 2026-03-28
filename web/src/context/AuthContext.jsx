@@ -72,6 +72,10 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  const changePassword = useCallback(async (vecchiaPassword, nuovaPassword) => {
+    await meApi.changeMyPassword(vecchiaPassword, nuovaPassword)
+  }, [])
+
   const value = useMemo(
     () => ({
       token,
@@ -80,9 +84,10 @@ export function AuthProvider({ children }) {
       login,
       register,
       deleteAccount,
+      changePassword,
       logout,
     }),
-    [token, user, login, register, deleteAccount, logout],
+    [token, user, login, register, deleteAccount, changePassword, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

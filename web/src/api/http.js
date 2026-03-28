@@ -41,7 +41,12 @@ export async function request(path, options = {}) {
   const text = await res.text()
   const data = text ? parseJsonSafe(text) : null
 
-  if (res.status === 401 && hadAuth && path !== '/api/auth/login') {
+  // Se è 401, facciamo logout SOLO se non è un tentativo di login o un cambio password
+  // (dove 401 indica credenziali errate, non sessione scaduta)
+  const isLoginPath = path === '/api/auth/login'
+  const isChangePasswordPath = path === '/api/me/account/password'
+
+  if (res.status === 401 && hadAuth && !isLoginPath && !isChangePasswordPath) {
     clearToken()
     window.dispatchEvent(new CustomEvent('auth:session-expired'))
   }
