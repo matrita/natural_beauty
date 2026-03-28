@@ -10,8 +10,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface AppuntamentoRepository extends JpaRepository<Appuntamento, Long> {
 
+    @Query("select a from Appuntamento a join fetch a.trattamento where a.operatore.id = :operatoreId and a.dataOraInizio between :inizio and :fine")
     List<Appuntamento> findByOperatoreIdAndDataOraInizioBetween(
-            Long operatoreId, LocalDateTime inizio, LocalDateTime fine);
+            @Param("operatoreId") Long operatoreId, 
+            @Param("inizio") LocalDateTime inizio, 
+            @Param("fine") LocalDateTime fine);
 
     @Query(
             """
@@ -21,8 +24,16 @@ public interface AppuntamentoRepository extends JpaRepository<Appuntamento, Long
             """)
     Optional<Appuntamento> findByIdWithDetails(@Param("id") Long id);
 
+    @Query(
+            """
+            select a from Appuntamento a
+            join fetch a.cliente join fetch a.operatore join fetch a.trattamento
+            where a.dataOraInizio between :inizio and :fine
+            order by a.dataOraInizio asc
+            """)
     List<Appuntamento> findByDataOraInizioBetweenOrderByDataOraInizioAsc(
-            LocalDateTime inizio, LocalDateTime fine);
+            @Param("inizio") LocalDateTime inizio, 
+            @Param("fine") LocalDateTime fine);
 
     @Query(
             """

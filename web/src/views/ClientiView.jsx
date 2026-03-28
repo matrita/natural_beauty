@@ -1,56 +1,22 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import * as clientiApi from '../api/clientiApi'
 import ErrorAlert from '../ui/ErrorAlert'
-
-const emptyForm = { nome: '', cognome: '', email: '', telefono: '', note: '' }
+import ClienteForm from './clienti/ClienteForm'
+import { useFetch } from '../lib/useFetch'
 
 export default function ClientiView() {
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [form, setForm] = useState(emptyForm)
-  const [editingId, setEditingId] = useState(null)
+  const { data: items, loading, error, setError, execute: load } = useFetch(clientiApi.listClienti)
+  const [editingItem, setEditingItem] = useState(null)
 
-  const load = useCallback(async () => {
-    setError(null)
-    setLoading(true)
-    try {
-      const data = await clientiApi.listClienti()
-      setItems(data)
-    } catch (e) {
-      setError(e)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleFormSubmit(formData) {
     setError(null)
     try {
-      if (editingId != null) {
-        await clientiApi.updateCliente(editingId, {
-          nome: form.nome,
-          cognome: form.cognome,
-          email: form.email,
-          telefono: form.telefono || null,
-          note: form.note || null,
-        })
+      if (editingItem) {
+        await clientiApi.updateCliente(editingItem.id, formData)
       } else {
-        await clientiApi.createCliente({
-          nome: form.nome,
-          cognome: form.cognome,
-          email: form.email,
-          telefono: form.telefono || null,
-          note: form.note || null,
-        })
+        await clientiApi.createCliente(formData)
       }
-      setForm(emptyForm)
-      setEditingId(null)
+      setEditingItem(null)
       await load()
     } catch (err) {
       setError(err)
@@ -62,82 +28,22 @@ export default function ClientiView() {
     setError(null)
     try {
       await clientiApi.deleteCliente(id)
-      if (editingId === id) {
-        setEditingId(null)
-        setForm(emptyForm)
-      }
+      if (editingItem?.id === id) setEditingItem(null)
       await load()
     } catch (e) {
       setError(e)
     }
   }
 
-  function startEdit(c) {
-    setEditingId(c.id)
-    setForm({
-      nome: c.nome,
-      cognome: c.cognome,
-      email: c.email,
-      telefono: c.telefono ?? '',
-      note: c.note ?? '',
-    })
-  }
-
-  function cancelEdit() {
-    setEditingId(null)
-    setForm(emptyForm)
-  }
-
   return (
     <div className="view">
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
-      <form className="form-grid" onSubmit={handleSubmit}>
-        <h3 className="form-grid__title">{editingId != null ? 'Modifica cliente' : 'Nuovo cliente'}</h3>
-        <label className="field">
-          <span>Nome</span>
-          <input
-            required
-            value={form.nome}
-            onChange={(ev) => setForm((f) => ({ ...f, nome: ev.target.value }))}
-          />
-        </label>
-        <label className="field">
-          <span>Cognome</span>
-          <input
-            required
-            value={form.cognome}
-            onChange={(ev) => setForm((f) => ({ ...f, cognome: ev.target.value }))}
-          />
-        </label>
-        <label className="field field--full">
-          <span>Email</span>
-          <input
-            type="email"
-            required
-            value={form.email}
-            onChange={(ev) => setForm((f) => ({ ...f, email: ev.target.value }))}
-          />
-        </label>
-        <label className="field">
-          <span>Telefono</span>
-          <input value={form.telefono} onChange={(ev) => setForm((f) => ({ ...f, telefono: ev.target.value }))} />
-        </label>
-        <label className="field field--full">
-          <span>Note</span>
-          <textarea value={form.note} onChange={(ev) => setForm((f) => ({ ...f, note: ev.target.value }))} rows={2} />
-        </label>
-        <div className="form-actions">
-          <button type="submit" className="btn btn--primary">
-            {editingId != null ? 'Salva modifiche' : 'Crea cliente'}
-          </button>
-          {editingId != null && (
-            <button type="button" className="btn" onClick={cancelEdit}>
-              Annulla
-            </button>
-          )}
-        </div>
-      </form>
+      <ClienteForm
+        initialData={editingItem}
+        onSubmit={handleFormSubmit}
+        onCancel={() => setEditingItem(null)}
+      />
 
       <div className="panel panel--inner">
         <h3>Elenco</h3>
@@ -154,7 +60,7 @@ export default function ClientiView() {
                   <span className="meta">{c.email}</span>
                 </div>
                 <div className="list-row__actions">
-                  <button type="button" className="btn btn--small" onClick={() => startEdit(c)}>
+                  <button type="button" className="btn btn--small" onClick={() => setEditingItem(c)}>
                     Modifica
                   </button>
                   <button type="button" className="btn btn--small btn--danger" onClick={() => handleDelete(c.id)}>

@@ -1,11 +1,13 @@
 package com.example.natural_beauty.config;
 
 import com.example.natural_beauty.security.JwtAuthenticationFilter;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -14,9 +16,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Abilita @PreAuthorize sui controller
 public class SecurityConfig {
 
     @Bean
@@ -30,46 +36,29 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
-            throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers(HttpMethod.OPTIONS, "/**")
-                                        .permitAll()
-                                        .requestMatchers("/api/auth/**")
-                                        .permitAll()
-                                        .requestMatchers("/api/me/**")
-                                        .hasRole("CLIENTE")
-                                        // Nota: il matcher method-specific puo essere fragile a seconda della
-                                        // strategia di matching; qui usiamo solo il path cosi il CLIENTE puo
-                                        // sempre chiamare la disponibilita.
-                                        .requestMatchers("/api/appuntamenti/disponibilita")
-                                        .authenticated()
-                                        .requestMatchers("/api/utenti/**")
-                                        .hasRole("ADMIN")
-                                        .requestMatchers("/api/clienti/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers(HttpMethod.POST, "/api/operatori/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers(HttpMethod.PUT, "/api/operatori/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers(HttpMethod.DELETE, "/api/operatori/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers(HttpMethod.POST, "/api/trattamenti/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers(HttpMethod.PUT, "/api/trattamenti/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers(HttpMethod.DELETE, "/api/trattamenti/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers("/api/appuntamenti/**")
-                                        .hasAnyRole("ADMIN", "STAFF")
-                                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        
         return http.build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173")); // URL di default di Vite
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

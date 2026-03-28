@@ -4,48 +4,45 @@ import com.example.natural_beauty.dto.AggiornaStatoAppuntamentoRequest;
 import com.example.natural_beauty.dto.AppuntamentoRequest;
 import com.example.natural_beauty.dto.AppuntamentoResponse;
 import com.example.natural_beauty.service.AppuntamentoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * Endpoint gestione appuntamenti per staff/amministrazione.
- *
- * <p>Nota: l'endpoint {@code /disponibilita} e' consultabile anche dai clienti autenticati, mentre le altre operazioni
- * sono riservate a {@code STAFF}/{@code ADMIN} (vedi {@link com.example.natural_beauty.config.SecurityConfig}).
- */
 @RestController
 @RequestMapping("/api/appuntamenti")
+@Tag(name = "Appuntamenti", description = "Endpoint per la gestione delle prenotazioni e disponibilità")
+@SecurityRequirement(name = "bearerAuth") // Tutti i metodi in questo controller richiedono JWT
 public class AppuntamentoController {
 
+    private static final Logger log = LoggerFactory.getLogger(AppuntamentoController.class);
     private final AppuntamentoService appuntamentoService;
 
     public AppuntamentoController(AppuntamentoService appuntamentoService) {
         this.appuntamentoService = appuntamentoService;
     }
 
-    /** Lista appuntamenti (staff) in un periodo. */
     @GetMapping
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Lista appuntamenti nel periodo", description = "Recupera tutti gli appuntamenti (compresi dettagli cliente e operatore) in un arco temporale.")
     public List<AppuntamentoResponse> nelPeriodo(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime da,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime a) {
+        log.debug("Richiesta lista appuntamenti da {} a {}", da, a);
         return appuntamentoService.trovaNelPeriodo(da, a);
     }
 
-    /** Calcolo slot disponibili per un operatore e un trattamento (durata trattamento). */
     @GetMapping("/disponibilita")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Calcola slot disponibili", description = "Restituisce una lista di orari (LocalDateTime) in cui l'operatore è libero per il trattamento selezionato.")
     public List<LocalDateTime> disponibilita(
             @RequestParam Long operatoreId,
             @RequestParam Long trattamentoId,
@@ -55,30 +52,37 @@ public class AppuntamentoController {
         return appuntamentoService.disponibilita(operatoreId, trattamentoId, da, a, stepMinuti);
     }
 
-    /** Dettaglio appuntamento per id. */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Dettaglio appuntamento", description = "Recupera le informazioni complete di un singolo appuntamento tramite ID.")
     public AppuntamentoResponse dettaglio(@PathVariable Long id) {
         return appuntamentoService.trovaPerId(id);
     }
 
-    /** Prenotazione (staff) con scelta esplicita del cliente. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Crea prenotazione (Staff)", description = "Permette allo staff di creare una prenotazione per un cliente specifico.")
     public AppuntamentoResponse prenota(@RequestBody @Valid AppuntamentoRequest request) {
+        log.info("Creazione nuovo appuntamento per clienteId={} da parte dello staff", request.clienteId());
         return appuntamentoService.prenota(request);
     }
 
-    /** Aggiornamento stato appuntamento (staff). */
     @PatchMapping("/{id}/stato")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Aggiorna stato appuntamento", description = "Cambia lo stato (es. da PRENOTATO a COMPLETATO) di un appuntamento.")
     public AppuntamentoResponse aggiornaStato(
             @PathVariable Long id, @RequestBody @Valid AggiornaStatoAppuntamentoRequest request) {
+        log.info("Aggiornamento stato appuntamento id={} in {}", id, request.stato());
         return appuntamentoService.aggiornaStato(id, request.stato());
     }
 
-    /** Eliminazione fisica dell'appuntamento (staff). */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Elimina appuntamento", description = "Rimuove definitivamente un appuntamento dal sistema.")
     public void elimina(@PathVariable Long id) {
+        log.warn("Eliminazione appuntamento id={}", id);
         appuntamentoService.elimina(id);
     }
 }

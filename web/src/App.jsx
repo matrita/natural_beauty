@@ -7,7 +7,7 @@ import OperatoriView from './views/OperatoriView'
 import TrattamentiView from './views/TrattamentiView'
 import AppuntamentiView from './views/AppuntamentiView'
 import UtentiView from './views/UtentiView'
-import ConfirmDialog from './ui/ConfirmDialog'
+import Layout from './ui/Layout'
 
 const TABS = [
   { id: 'trattamenti', label: 'Trattamenti', View: TrattamentiView, roles: ['CLIENTE', 'STAFF', 'ADMIN'] },
@@ -18,13 +18,12 @@ const TABS = [
 ]
 
 export default function App() {
-  const { isAuthenticated, user, logout, deleteAccount } = useAuth()
-  const [tab, setTab] = useState('trattamenti')
+  const { isAuthenticated, user, logout } = useAuth()
+  const [activeTabId, setActiveTabId] = useState('trattamenti')
   const role = user?.ruolo || 'CLIENTE'
-  const allowedTabs = TABS.filter((t) => (t.roles ? t.roles.includes(role) : true))
-  const active = allowedTabs.find((t) => t.id === tab) ?? allowedTabs[0]
-  const View = active?.View
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const allowedTabs = TABS.filter((t) => t.roles.includes(role))
+  const currentTab = allowedTabs.find((t) => t.id === activeTabId) ?? allowedTabs[0]
+  const View = currentTab?.View
 
   if (!isAuthenticated) {
     return <AuthView />
@@ -45,73 +44,8 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <ConfirmDialog
-        open={confirmDeleteOpen}
-        title="Eliminare l'account?"
-        message={
-          <>
-            <div>
-              Questa operazione elimina definitivamente il tuo account e i tuoi appuntamenti associati.
-            </div>
-            <div>Non potrai recuperare i dati.</div>
-          </>
-        }
-        confirmLabel="Si, elimina"
-        cancelLabel="No"
-        danger
-        onCancel={() => setConfirmDeleteOpen(false)}
-        onConfirm={async () => {
-          setConfirmDeleteOpen(false)
-          await deleteAccount()
-        }}
-      />
-      <header className="hero hero--app">
-        <div className="hero__top">
-          <div>
-            <p className="eyebrow">Centro estetico</p>
-            <h1>Natural Beauty</h1>
-          </div>
-          <div className="user-bar">
-            <span className="user-bar__info">
-              {user?.email}
-              {user?.ruolo && <span className="user-bar__role">{user.ruolo}</span>}
-            </span>
-            {role === 'CLIENTE' && (
-              <button
-                type="button"
-                className="btn btn--small btn--danger"
-                onClick={() => setConfirmDeleteOpen(true)}
-              >
-                Elimina account
-              </button>
-            )}
-            <button type="button" className="btn btn--small" onClick={logout}>
-              Esci
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <nav className="tabs" aria-label="Sezioni applicazione">
-        {allowedTabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={`tabs__btn${tab === t.id ? ' tabs__btn--active' : ''}`}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-
-      <section className="panel panel--main" aria-labelledby={`tab-${active.id}`}>
-        <h2 id={`tab-${active.id}`} className="panel__title">
-          {active.label}
-        </h2>
-        <View />
-      </section>
-    </div>
+    <Layout tabs={allowedTabs} activeTabId={currentTab.id} onTabChange={setActiveTabId}>
+      <View />
+    </Layout>
   )
 }

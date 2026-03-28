@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import * as trattamentiApi from '../api/trattamentiApi'
 import ErrorAlert from '../ui/ErrorAlert'
 import { useAuth } from '../context/AuthContext'
-
-const emptyForm = { nome: '', durataMinuti: '60', prezzo: '', descrizione: '', attivo: true }
+import TrattamentoForm from './trattamenti/TrattamentoForm'
 
 export default function TrattamentiView() {
   const { user } = useAuth()
@@ -12,8 +11,7 @@ export default function TrattamentiView() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [form, setForm] = useState(emptyForm)
-  const [editingId, setEditingId] = useState(null)
+  const [editingItem, setEditingItem] = useState(null)
 
   const load = useCallback(async () => {
     setError(null)
@@ -32,24 +30,15 @@ export default function TrattamentiView() {
     load()
   }, [load])
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleFormSubmit(formData) {
     setError(null)
     try {
-      const body = {
-        nome: form.nome,
-        durataMinuti: Number(form.durataMinuti),
-        prezzo: String(form.prezzo).replace(',', '.'),
-        descrizione: form.descrizione || null,
-        attivo: form.attivo,
-      }
-      if (editingId != null) {
-        await trattamentiApi.updateTrattamento(editingId, body)
+      if (editingItem) {
+        await trattamentiApi.updateTrattamento(editingItem.id, formData)
       } else {
-        await trattamentiApi.createTrattamento(body)
+        await trattamentiApi.createTrattamento(formData)
       }
-      setForm(emptyForm)
-      setEditingId(null)
+      setEditingItem(null)
       await load()
     } catch (err) {
       setError(err)
@@ -61,25 +50,11 @@ export default function TrattamentiView() {
     setError(null)
     try {
       await trattamentiApi.deleteTrattamento(id)
-      if (editingId === id) {
-        setEditingId(null)
-        setForm(emptyForm)
-      }
+      if (editingItem?.id === id) setEditingItem(null)
       await load()
     } catch (e) {
       setError(e)
     }
-  }
-
-  function startEdit(t) {
-    setEditingId(t.id)
-    setForm({
-      nome: t.nome,
-      durataMinuti: String(t.durataMinuti),
-      prezzo: String(t.prezzo),
-      descrizione: t.descrizione ?? '',
-      attivo: t.attivo,
-    })
   }
 
   return (
@@ -95,70 +70,11 @@ export default function TrattamentiView() {
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       {!isCliente && (
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <h3 className="form-grid__title">{editingId != null ? 'Modifica trattamento' : 'Nuovo trattamento'}</h3>
-          <label className="field field--full">
-            <span>Nome</span>
-            <input
-              required
-              value={form.nome}
-              onChange={(ev) => setForm((f) => ({ ...f, nome: ev.target.value }))}
-            />
-          </label>
-          <label className="field">
-            <span>Durata (min)</span>
-            <input
-              type="number"
-              required
-              min={5}
-              value={form.durataMinuti}
-              onChange={(ev) => setForm((f) => ({ ...f, durataMinuti: ev.target.value }))}
-            />
-          </label>
-          <label className="field">
-            <span>Prezzo</span>
-            <input
-              type="text"
-              required
-              placeholder="es. 45.00"
-              value={form.prezzo}
-              onChange={(ev) => setForm((f) => ({ ...f, prezzo: ev.target.value }))}
-            />
-          </label>
-          <label className="field field--full">
-            <span>Descrizione</span>
-            <textarea
-              value={form.descrizione}
-              onChange={(ev) => setForm((f) => ({ ...f, descrizione: ev.target.value }))}
-              rows={2}
-            />
-          </label>
-          <label className="inline-check field--full">
-            <input
-              type="checkbox"
-              checked={form.attivo}
-              onChange={(ev) => setForm((f) => ({ ...f, attivo: ev.target.checked }))}
-            />
-            Attivo
-          </label>
-          <div className="form-actions">
-            <button type="submit" className="btn btn--primary">
-              {editingId != null ? 'Salva' : 'Crea'}
-            </button>
-            {editingId != null && (
-              <button
-                type="button"
-                className="btn"
-                onClick={() => {
-                  setEditingId(null)
-                  setForm(emptyForm)
-                }}
-              >
-                Annulla
-              </button>
-            )}
-          </div>
-        </form>
+        <TrattamentoForm
+          initialData={editingItem}
+          onSubmit={handleFormSubmit}
+          onCancel={() => setEditingItem(null)}
+        />
       )}
 
       <div className="panel panel--inner">
@@ -180,7 +96,7 @@ export default function TrattamentiView() {
                 </div>
                 {!isCliente && (
                   <div className="list-row__actions">
-                    <button type="button" className="btn btn--small" onClick={() => startEdit(t)}>
+                    <button type="button" className="btn btn--small" onClick={() => setEditingItem(t)}>
                       Modifica
                     </button>
                     <button type="button" className="btn btn--small btn--danger" onClick={() => handleDelete(t.id)}>

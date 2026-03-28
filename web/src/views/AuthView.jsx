@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { ApiError } from '../api/http'
+import LoginForm from './auth/LoginForm'
+import RegisterForm from './auth/RegisterForm'
 
 export default function AuthView() {
   const { login, register } = useAuth()
-  const [mode, setMode] = useState('login') // 'login' | 'register'
-
-  const [loginEmail, setLoginEmail] = useState('admin@naturalbeauty.local')
-  const [loginPassword, setLoginPassword] = useState('changeme')
-
-  const [regEmail, setRegEmail] = useState('')
-  const [regPassword, setRegPassword] = useState('')
-  const [regPassword2, setRegPassword2] = useState('')
-  const [regNome, setRegNome] = useState('')
-  const [regCognome, setRegCognome] = useState('')
-  const [regTelefono, setRegTelefono] = useState('')
-
+  const [mode, setMode] = useState('login')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -24,39 +15,30 @@ export default function AuthView() {
     setLoading(false)
   }, [mode])
 
-  async function handleLogin(e) {
-    e.preventDefault()
+  async function handleLogin(email, password) {
     setError(null)
     setLoading(true)
     try {
-      await login(loginEmail, loginPassword)
+      await login(email, password)
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Accesso non riuscito'
-      setError(msg)
+      setError(err instanceof ApiError ? err.message : 'Accesso non riuscito')
     } finally {
       setLoading(false)
     }
   }
 
-  async function handleRegister(e) {
-    e.preventDefault()
-    setError(null)
-    if (regPassword !== regPassword2) {
+  async function handleRegister(formData) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Le password non coincidono')
       return
     }
+    setError(null)
     setLoading(true)
     try {
-      await register({
-        email: regEmail,
-        password: regPassword,
-        nome: regNome,
-        cognome: regCognome,
-        telefono: regTelefono,
-      })
+      const { confirmPassword, ...data } = formData
+      await register(data)
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Registrazione non riuscita'
-      setError(msg)
+      setError(err instanceof ApiError ? err.message : 'Registrazione non riuscita')
     } finally {
       setLoading(false)
     }
@@ -71,124 +53,32 @@ export default function AuthView() {
         </p>
 
         <div className="auth-switch" role="tablist" aria-label="Autenticazione">
-          <button
-            type="button"
-            className={`auth-switch__btn${mode === 'login' ? ' auth-switch__btn--active' : ''}`}
-            onClick={() => setMode('login')}
-            role="tab"
-            aria-selected={mode === 'login'}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            className={`auth-switch__btn${mode === 'register' ? ' auth-switch__btn--active' : ''}`}
-            onClick={() => setMode('register')}
-            role="tab"
-            aria-selected={mode === 'register'}
-          >
-            Registrazione
-          </button>
+          {['login', 'register'].map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`auth-switch__btn${mode === m ? ' auth-switch__btn--active' : ''}`}
+              onClick={() => setMode(m)}
+              role="tab"
+              aria-selected={mode === m}
+            >
+              {m === 'login' ? 'Login' : 'Registrazione'}
+            </button>
+          ))}
         </div>
 
         {mode === 'login' ? (
-          <form className="login__form" onSubmit={handleLogin}>
-            <label className="field field--full">
-              <span>Email</span>
-              <input
-                type="email"
-                autoComplete="username"
-                required
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-              />
-            </label>
-            <label className="field field--full">
-              <span>Password</span>
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-              />
-            </label>
-            {error && (
-              <p className="error" role="alert">
-                {error}
-              </p>
-            )}
-            <button type="submit" className="btn btn--primary login__submit" disabled={loading}>
-              {loading ? 'Accesso…' : 'Entra'}
-            </button>
-          </form>
+          <LoginForm onSubmit={handleLogin} loading={loading} error={mode === 'login' ? error : null} />
         ) : (
-          <form className="login__form" onSubmit={handleRegister}>
-            <label className="field field--full">
-              <span>Nome</span>
-              <input required value={regNome} onChange={(e) => setRegNome(e.target.value)} />
-            </label>
-            <label className="field field--full">
-              <span>Cognome</span>
-              <input required value={regCognome} onChange={(e) => setRegCognome(e.target.value)} />
-            </label>
-            <label className="field field--full">
-              <span>Email</span>
-              <input
-                type="email"
-                autoComplete="username"
-                required
-                value={regEmail}
-                onChange={(e) => setRegEmail(e.target.value)}
-              />
-            </label>
-            <label className="field field--full">
-              <span>Telefono (opzionale)</span>
-              <input value={regTelefono} onChange={(e) => setRegTelefono(e.target.value)} />
-            </label>
-            <label className="field field--full">
-              <span>Password</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={4}
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-              />
-            </label>
-            <label className="field field--full">
-              <span>Conferma password</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={4}
-                value={regPassword2}
-                onChange={(e) => setRegPassword2(e.target.value)}
-              />
-            </label>
-            {error && (
-              <p className="error" role="alert">
-                {error}
-              </p>
-            )}
-            <button type="submit" className="btn btn--primary login__submit" disabled={loading}>
-              {loading ? 'Creazione…' : 'Crea account'}
-            </button>
-          </form>
+          <RegisterForm onSubmit={handleRegister} loading={loading} error={mode === 'register' ? error : null} />
         )}
 
-        {mode === 'login' && (
-          <p className="muted login__hint">
-            Credenziali di sviluppo da <code>application.properties</code> (<code>app.security.bootstrap.*</code>).
-          </p>
-        )}
-        {mode === 'register' && (
-          <p className="muted login__hint">
-            Il nuovo account viene creato con ruolo <code>CLIENTE</code>.
-          </p>
-        )}
+        <p className="muted login__hint">
+          {mode === 'login' 
+            ? <>Credenziali di sviluppo da <code>application.properties</code> (<code>app.security.bootstrap.*</code>).</>
+            : <>Il nuovo account viene creato con ruolo <code>CLIENTE</code>.</>
+          }
+        </p>
       </div>
     </div>
   )
