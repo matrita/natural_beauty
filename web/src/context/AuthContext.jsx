@@ -18,21 +18,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const t = getToken()
     let p = getProfile()
+    
+    // Se abbiamo il token ma NON il profilo, proviamo a ricostruirlo dal JWT (solo email e ruolo)
     if (t && !p) {
       try {
         const payload = JSON.parse(atob(t.split('.')[1]))
         const raw = String(payload.roles || '').trim()
-        const firstRole = raw
-          .split(/\s+/)
-          .map((r) => r.replace(/^ROLE_/i, ''))
-          .find(Boolean)
+        const firstRole = raw.split(/\s+/).map((r) => r.replace(/^ROLE_/i, '')).find(Boolean)
         const ruolo = firstRole || 'CLIENTE'
-        p = { email: payload.sub, ruolo }
+        
+        p = { email: payload.sub, ruolo, nome: '', cognome: '' }
         setProfile(p)
         setUser(p)
-      } catch {
-        /* ignora */
-      }
+      } catch { /* ignora */ }
     }
   }, [])
 
@@ -47,8 +45,13 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const res = await authApi.login(email, password)
+    const profile = { 
+      email: res.email, 
+      ruolo: res.ruolo, 
+      nome: res.nome || '', 
+      cognome: res.cognome || '' 
+    }
     persistToken(res.token)
-    const profile = { email: res.email, ruolo: res.ruolo }
     setProfile(profile)
     setToken(res.token)
     setUser(profile)
@@ -57,8 +60,13 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     const res = await authApi.registerCliente(payload)
+    const profile = { 
+      email: res.email, 
+      ruolo: res.ruolo, 
+      nome: res.nome || '', 
+      cognome: res.cognome || '' 
+    }
     persistToken(res.token)
-    const profile = { email: res.email, ruolo: res.ruolo }
     setProfile(profile)
     setToken(res.token)
     setUser(profile)

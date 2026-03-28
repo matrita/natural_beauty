@@ -57,23 +57,35 @@ public class AuthService {
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o password non validi");
         }
+        
         UserDetails user = userDetailsService.loadUserByUsername(request.email());
         String token = jwtService.generateToken(user);
-        String ruolo =
-                utenteRepository
-                        .findByEmail(request.email())
-                        .map(u -> u.getRuolo().name())
-                        .orElse("STAFF");
-        return LoginResponse.of(token, jwtExpirationMs / 1000, request.email(), ruolo);
+        
+        Utente utente = utenteRepository.findByEmail(request.email())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        String nome = "";
+        String cognome = "";
+
+        // Se è cliente, recuperiamo i dati reali dall'anagrafica cliente
+        var clienteOpt = clienteRepository.findByEmail(request.email());
+        if (clienteOpt.isPresent()) {
+            nome = clienteOpt.get().getNome();
+            cognome = clienteOpt.get().getCognome();
+        } else {
+            // Se è staff/admin, usiamo email come nome per ora o una stringa di fallback
+            nome = utente.getRuolo().name();
+            cognome = "User";
+        }
+
+        return LoginResponse.of(token, jwtExpirationMs / 1000, request.email(), utente.getRuolo().name(), nome, cognome);
     }
 
     public LoginResponse register(RegisterRequest request) {
-        if (utenteRepository.existsByEmail(request.email())) {
+        if (utenteRepository.existsByEmail(request.email()) || clienteRepository.existsByEmail(request.email())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email già registrata");
         }
-        if (clienteRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email già registrata");
-        }
+        
         Utente u = new Utente();
         u.setEmail(request.email());
         u.setPasswordHash(passwordEncoder.encode(request.password()));
@@ -85,11 +97,10 @@ public class AuthService {
         c.setCognome(request.cognome());
         c.setEmail(request.email());
         c.setTelefono(request.telefono());
-        c.setNote(null);
         clienteRepository.save(c);
 
         UserDetails user = userDetailsService.loadUserByUsername(request.email());
         String token = jwtService.generateToken(user);
-        return LoginResponse.of(token, jwtExpirationMs / 1000, request.email(), u.getRuolo().name());
+        return LoginResponse.of(token, jwtExpirationMs / 1000, request.email(), u.getRuolo().name(), c.getNome(), c.getCognome());
     }
 }

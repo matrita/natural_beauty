@@ -12,43 +12,26 @@ export default function Layout({ children, tabs, activeTabId, onTabChange }) {
   
   const role = user?.ruolo || 'CLIENTE'
   const activeTab = tabs.find((t) => t.id === activeTabId)
+  
+  // Se nome e cognome sono presenti, mostriamo quelli, altrimenti fallback sull'email
+  const displayName = user?.nome ? `${user.nome} ${user.cognome}` : user?.email;
 
   async function handlePasswordChange(oldPwd, newPwd, confirmPwd) {
-    // 1. Controllo coincidenza password (mostrato tramite FeedbackModal)
     if (newPwd !== confirmPwd) {
-      setFeedback({
-        title: 'Nuova password non valida',
-        message: 'Le due nuove password inserite non corrispondono. Riprova.',
-        type: 'error'
-      })
+      setFeedback({ title: 'Errore', message: 'Le nuove password non corrispondono.', type: 'error' })
       return
     }
-
-    // 2. Controllo lunghezza minima
     if (newPwd.length < 4) {
-      setFeedback({
-        title: 'Nuova password troppo corta',
-        message: 'La nuova password deve contenere almeno 4 caratteri.',
-        type: 'error'
-      })
+      setFeedback({ title: 'Errore', message: 'La password deve contenere almeno 4 caratteri.', type: 'error' })
       return
     }
 
-    // 3. Esecuzione chiamata API
     try {
       await changePassword(oldPwd, newPwd)
       setChangePasswordOpen(false)
-      setFeedback({
-        title: 'Password aggiornata',
-        message: 'La tua password è stata modificata con successo.',
-        type: 'success'
-      })
+      setFeedback({ title: 'Successo', message: 'Password aggiornata correttamente.', type: 'success' })
     } catch (e) {
-      setFeedback({
-        title: 'Errore cambio password',
-        message: e.message || 'La password attuale è errata o si è verificato un errore di rete.',
-        type: 'error'
-      })
+      setFeedback({ title: 'Errore', message: e.message || 'Errore durante il cambio password.', type: 'error' })
     }
   }
 
@@ -57,12 +40,7 @@ export default function Layout({ children, tabs, activeTabId, onTabChange }) {
       <ConfirmDialog
         open={confirmDeleteOpen}
         title="Eliminare l'account?"
-        message={
-          <>
-            <div>Questa operazione elimina definitivamente il tuo account e i tuoi appuntamenti associati.</div>
-            <div>Non potrai recuperare i dati.</div>
-          </>
-        }
+        message="Questa operazione è definitiva. Vuoi procedere?"
         confirmLabel="Si, elimina"
         cancelLabel="No"
         danger
@@ -97,24 +75,16 @@ export default function Layout({ children, tabs, activeTabId, onTabChange }) {
           </div>
           <div className="user-bar">
             <span className="user-bar__info">
-              {user?.email}
+              <strong style={{ color: 'var(--brand)' }}>{displayName}</strong>
               {user?.ruolo && <span className="user-bar__role">{user.ruolo}</span>}
             </span>
             
-            <button
-              type="button"
-              className="btn btn--small"
-              onClick={() => setChangePasswordOpen(true)}
-            >
+            <button type="button" className="btn btn--small" onClick={() => setChangePasswordOpen(true)}>
               Cambia Password
             </button>
 
             {role === 'CLIENTE' && (
-              <button
-                type="button"
-                className="btn btn--small btn--danger"
-                onClick={() => setConfirmDeleteOpen(true)}
-              >
+              <button type="button" className="btn btn--small btn--danger" onClick={() => setConfirmDeleteOpen(true)}>
                 Elimina account
               </button>
             )}
