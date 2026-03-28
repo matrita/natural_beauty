@@ -42,8 +42,9 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/api/me/**")
                                         .hasRole("CLIENTE")
-                                        // Note: method-specific matcher can be brittle depending on matcher type,
-                                        // keep it path-based so CLIENTE can always access availability.
+                                        // Nota: il matcher method-specific puo essere fragile a seconda della
+                                        // strategia di matching; qui usiamo solo il path cosi il CLIENTE puo
+                                        // sempre chiamare la disponibilita.
                                         .requestMatchers("/api/appuntamenti/disponibilita")
                                         .authenticated()
                                         .requestMatchers("/api/utenti/**")

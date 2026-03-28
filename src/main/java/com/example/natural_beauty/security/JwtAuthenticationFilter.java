@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception ignorata) {
             // token non valido: la richiesta prosegue senza autenticazione → 401 sulle route protette
         }
         filterChain.doFilter(request, response);

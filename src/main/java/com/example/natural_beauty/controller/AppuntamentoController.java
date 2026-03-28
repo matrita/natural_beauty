@@ -20,6 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Endpoint gestione appuntamenti per staff/amministrazione.
+ *
+ * <p>Nota: l'endpoint {@code /disponibilita} e' consultabile anche dai clienti autenticati, mentre le altre operazioni
+ * sono riservate a {@code STAFF}/{@code ADMIN} (vedi {@link com.example.natural_beauty.config.SecurityConfig}).
+ */
 @RestController
 @RequestMapping("/api/appuntamenti")
 public class AppuntamentoController {
@@ -30,6 +36,7 @@ public class AppuntamentoController {
         this.appuntamentoService = appuntamentoService;
     }
 
+    /** Lista appuntamenti (staff) in un periodo. */
     @GetMapping
     public List<AppuntamentoResponse> nelPeriodo(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime da,
@@ -37,6 +44,7 @@ public class AppuntamentoController {
         return appuntamentoService.trovaNelPeriodo(da, a);
     }
 
+    /** Calcolo slot disponibili per un operatore e un trattamento (durata trattamento). */
     @GetMapping("/disponibilita")
     public List<LocalDateTime> disponibilita(
             @RequestParam Long operatoreId,
@@ -47,23 +55,27 @@ public class AppuntamentoController {
         return appuntamentoService.disponibilita(operatoreId, trattamentoId, da, a, stepMinuti);
     }
 
+    /** Dettaglio appuntamento per id. */
     @GetMapping("/{id}")
     public AppuntamentoResponse dettaglio(@PathVariable Long id) {
         return appuntamentoService.trovaPerId(id);
     }
 
+    /** Prenotazione (staff) con scelta esplicita del cliente. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AppuntamentoResponse prenota(@RequestBody @Valid AppuntamentoRequest request) {
         return appuntamentoService.prenota(request);
     }
 
+    /** Aggiornamento stato appuntamento (staff). */
     @PatchMapping("/{id}/stato")
     public AppuntamentoResponse aggiornaStato(
             @PathVariable Long id, @RequestBody @Valid AggiornaStatoAppuntamentoRequest request) {
         return appuntamentoService.aggiornaStato(id, request.stato());
     }
 
+    /** Eliminazione fisica dell'appuntamento (staff). */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void elimina(@PathVariable Long id) {

@@ -5,7 +5,7 @@ function clearSession() {
     sessionStorage.removeItem('nb_token')
     sessionStorage.removeItem('nb_profile')
   } catch {
-    /* ignore */
+    /* ignora */
   }
 }
 
@@ -20,8 +20,8 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    // Keep it simple: log for debugging in DevTools.
-    console.error('App crashed:', error, info)
+    // Log utile per il debug dalla console (F12).
+    console.error('Errore applicazione:', error, info)
   }
 
   render() {
@@ -53,4 +53,3 @@ export default class ErrorBoundary extends React.Component {
     )
   }
 }
-

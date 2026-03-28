@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
         setProfile(p)
         setUser(p)
       } catch {
-        /* ignore */
+        /* ignora */
       }
     }
   }, [])

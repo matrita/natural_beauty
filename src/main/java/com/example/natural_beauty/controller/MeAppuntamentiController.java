@@ -20,6 +20,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Endpoint "area cliente": permette al ruolo {@code CLIENTE} di gestire i propri appuntamenti.
+ *
+ * <p>La relazione cliente-utente viene risolta tramite l'email dell'utente autenticato (JWT {@code sub}).
+ */
 @RestController
 @RequestMapping("/api/me/appuntamenti")
 public class MeAppuntamentiController {
@@ -30,6 +35,7 @@ public class MeAppuntamentiController {
         this.appuntamentoService = appuntamentoService;
     }
 
+    /** Lista degli appuntamenti del cliente autenticato nel periodo richiesto. */
     @GetMapping
     public List<AppuntamentoResponse> nelPeriodo(
             @AuthenticationPrincipal UserDetails user,
@@ -38,6 +44,7 @@ public class MeAppuntamentiController {
         return appuntamentoService.trovaMieiNelPeriodo(user.getUsername(), da, a);
     }
 
+    /** Prenotazione di un appuntamento per il cliente autenticato. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AppuntamentoResponse prenota(
@@ -45,9 +52,9 @@ public class MeAppuntamentiController {
         return appuntamentoService.prenotaComeCliente(user.getUsername(), request);
     }
 
+    /** Cancellazione di un appuntamento del cliente autenticato (imposta stato {@code CANCELLATO}). */
     @DeleteMapping("/{id}")
     public AppuntamentoResponse cancella(@AuthenticationPrincipal UserDetails user, @PathVariable Long id) {
         return appuntamentoService.cancellaMio(user.getUsername(), id);
     }
 }
-
