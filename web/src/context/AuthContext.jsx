@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import * as authApi from '../api/authApi'
+import * as meApi from '../api/meApi'
 import { clearToken, getProfile, getToken, setProfile, setToken as persistToken } from '../auth/tokenStore'
 
 const AuthContext = createContext(null)
@@ -64,6 +65,13 @@ export function AuthProvider({ children }) {
     return res
   }, [])
 
+  const deleteAccount = useCallback(async () => {
+    await meApi.deleteMyAccount()
+    clearToken()
+    setToken(null)
+    setUser(null)
+  }, [])
+
   const value = useMemo(
     () => ({
       token,
@@ -71,9 +79,10 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(token),
       login,
       register,
+      deleteAccount,
       logout,
     }),
-    [token, user, login, register, logout],
+    [token, user, login, register, deleteAccount, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

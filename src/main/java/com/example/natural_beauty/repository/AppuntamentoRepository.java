@@ -46,4 +46,6 @@ public interface AppuntamentoRepository extends JpaRepository<Appuntamento, Long
             """)
     Optional<Appuntamento> findByIdAndClienteIdWithDetails(
             @Param("id") Long id, @Param("clienteId") Long clienteId);
+
+    void deleteByClienteId(Long clienteId);
 }
