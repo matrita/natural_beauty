@@ -1,6 +1,5 @@
 package com.example.natural_beauty.controller;
 
-import com.example.natural_beauty.dto.AggiornaPasswordUtenteRequest;
 import com.example.natural_beauty.dto.AggiornaRuoloUtenteRequest;
 import com.example.natural_beauty.dto.CreaUtenteRequest;
 import com.example.natural_beauty.dto.UtenteResponse;
@@ -50,15 +49,6 @@ public class UtenteController {
             @PathVariable Long id, @RequestBody @Valid AggiornaRuoloUtenteRequest request) {
         log.info("Cambio ruolo per utente id={} in {}", id, request.ruolo());
         return utenteService.aggiornaRuolo(id, request.ruolo());
-    }
-
-    @PostMapping("/{id}/password")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Reimposta password", description = "Permette all'amministratore di forzare il reset della password di un utente.")
-    public void aggiornaPassword(
-            @PathVariable Long id, @RequestBody @Valid AggiornaPasswordUtenteRequest request) {
-        log.warn("Reset password richiesto per utente id={}", id);
-        utenteService.aggiornaPassword(id, request.password());
     }
 
     @DeleteMapping("/{id}")

@@ -64,11 +64,6 @@ public class UtenteService {
         return toResponse(u);
     }
 
-    public void aggiornaPassword(Long id, String password) {
-        Utente u = utenteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        u.setPasswordHash(passwordEncoder.encode(password));
-    }
-
     public void elimina(Long id) {
         if (!utenteRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);

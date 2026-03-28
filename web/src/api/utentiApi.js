@@ -18,14 +18,6 @@ export function updateRuoloUtente(id, ruolo) {
   })
 }
 
-export function updatePasswordUtente(id, password) {
-  return request(`/api/utenti/${id}/password`, {
-    method: 'POST',
-    body: JSON.stringify({ password }),
-  })
-}
-
 export function deleteUtente(id) {
   return request(`/api/utenti/${id}`, { method: 'DELETE' })
 }
-
