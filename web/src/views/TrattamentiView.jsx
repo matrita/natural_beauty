@@ -104,34 +104,42 @@ export default function TrattamentiView() {
           <div className="list">
             {items.length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun trattamento disponibile.</p>}
             {items.map((t) => (
-              <div key={t.id} className="list-row">
+              <div key={t.id} className="list-row" style={{ padding: '1.5rem 0' }}>
                 <div className="list-row__main" style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span className="name">{t.nome}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span className="name" style={{ fontSize: '1.2rem', color: 'var(--brand)' }}>{t.nome}</span>
                     {!t.attivo && <span className="badge badge--off" style={{ background: '#ffebeb', color: '#d63031' }}>Non attivo</span>}
                   </div>
-                  <p className="meta" style={{ marginTop: '0.2rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
+                  <p className="meta" style={{ color: 'var(--muted)', fontSize: '0.95rem', maxWidth: '80%' }}>
                     {t.descrizione || 'Nessuna descrizione disponibile.'}
                   </p>
-                  <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem' }}>
-                    <span className="badge" style={{ margin: 0, padding: '0.3rem 0.8rem', background: '#f5f7f5' }}>
-                       ⏱ {t.durataMinuti} min
-                    </span>
-                    <span className="badge" style={{ margin: 0, padding: '0.3rem 0.8rem', background: '#fdf8f3', color: '#d4a373' }}>
-                       € {t.prezzo}
-                    </span>
-                  </div>
                 </div>
-                {!isCliente && (
-                  <div className="list-row__actions" style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button type="button" className="btn btn--small" onClick={() => setEditingItem(t)}>
-                       Modifica
-                    </button>
-                    <button type="button" className="btn btn--small btn--danger" onClick={() => setItemToDelete(t)}>
-                       Elimina
-                    </button>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.8rem', minWidth: '120px' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Prezzo:</span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--accent)' }}>
+                      € {t.prezzo}
+                    </span>
                   </div>
-                )}
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Durata:</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--brand)' }}>
+                      {t.durataMinuti} min
+                    </span>
+                  </div>
+                  
+                  {!isCliente && (
+                    <div className="list-row__actions" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                      <button type="button" className="btn btn--small" onClick={() => setEditingItem(t)}>
+                         Modifica
+                      </button>
+                      <button type="button" className="btn btn--small btn--danger" onClick={() => setItemToDelete(t)}>
+                         Elimina
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
