@@ -29,6 +29,7 @@ export default function ClienteAppuntamentiView() {
 
   const [slots, setSlots] = useState([])
   const [loadingSlots, setLoadingSlots] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [confirmCancelId, setConfirmCancelId] = useState(null)
   const [form, setForm] = useState({ operatoreId: '', trattamentoId: '', slot: '', note: '' })
 
@@ -57,6 +58,7 @@ export default function ClienteAppuntamentiView() {
   async function handlePrenota(e) {
     e.preventDefault()
     setListError(null)
+    setIsSubmitting(true)
     try {
       if (!form.slot) throw new Error('Seleziona uno slot disponibile')
       const dt = String(form.slot).length === 16 ? `${form.slot}:00` : String(form.slot)
@@ -71,6 +73,8 @@ export default function ClienteAppuntamentiView() {
       await handleCercaDisponibilita()
     } catch (e) {
       setListError(e)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -170,7 +174,9 @@ export default function ClienteAppuntamentiView() {
           <textarea value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} rows={2} />
         </label>
         <div className="form-actions">
-          <button type="submit" className="btn btn--primary">Prenota</button>
+          <button type="submit" className="btn btn--primary" disabled={isSubmitting}>
+            {isSubmitting ? 'Prenoto...' : 'Prenota'}
+          </button>
         </div>
       </form>
 

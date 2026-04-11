@@ -22,7 +22,7 @@ export function useFetch(fetchFn, { immediate = true, initialData = [] } = {}) {
 
   useEffect(() => {
     if (immediate) {
-      execute()
+      execute().catch(() => {})
     }
   }, [execute, immediate])
 

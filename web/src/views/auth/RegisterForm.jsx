@@ -18,9 +18,6 @@ export default function RegisterForm({ onSubmit, loading, error }) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (formData.password !== formData.confirmPassword) {
-      return // L'errore sarà gestito dal chiamante o validato qui
-    }
     onSubmit(formData)
   }
 

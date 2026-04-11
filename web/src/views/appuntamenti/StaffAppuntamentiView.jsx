@@ -36,10 +36,12 @@ export default function StaffAppuntamentiView() {
     dataOraInizio: toDateTimeLocalValue(new Date()),
     note: '',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleCreate(e) {
     e.preventDefault()
     setListError(null)
+    setIsSubmitting(true)
     try {
       let dt = form.dataOraInizio + (form.dataOraInizio.length === 16 ? ':00' : '')
       await appuntamentiApi.createAppuntamento({
@@ -53,6 +55,8 @@ export default function StaffAppuntamentiView() {
       await loadAppuntamenti()
     } catch (err) {
       setListError(err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -133,7 +137,9 @@ export default function StaffAppuntamentiView() {
           <textarea value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} rows={2} />
         </label>
         <div className="form-actions">
-          <button type="submit" className="btn btn--primary">Prenota</button>
+          <button type="submit" className="btn btn--primary" disabled={isSubmitting}>
+            {isSubmitting ? 'Prenoto...' : 'Prenota'}
+          </button>
         </div>
       </form>
 

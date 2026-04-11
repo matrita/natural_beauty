@@ -82,7 +82,24 @@ public class AppuntamentoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trattamento non attivo");
         }
 
+        if (inizio.isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Non è possibile prenotare un appuntamento nel passato");
+        }
+        
+        if (inizio.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Il centro è chiuso di domenica");
+        }
+        
+        LocalDateTime aperturaGiorno = LocalDateTime.of(inizio.toLocalDate(), LocalTime.of(9, 0));
+        LocalDateTime chiusuraGiorno = LocalDateTime.of(inizio.toLocalDate(), LocalTime.of(18, 0));
+        LocalDateTime fine = inizio.plusMinutes(trattamento.getDurataMinuti());
+        
+        if (inizio.isBefore(aperturaGiorno) || fine.isAfter(chiusuraGiorno)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'appuntamento deve essere compreso nell'orario lavorativo (09:00 - 18:00)");
+        }
+
         assertSlotLibero(operatore.getId(), inizio, trattamento.getDurataMinuti(), null);
+        assertClienteLibero(cliente.getId(), inizio, trattamento.getDurataMinuti(), null);
 
         Appuntamento a = new Appuntamento();
         a.setCliente(cliente);
@@ -116,6 +133,11 @@ public class AppuntamentoService {
                             log.error("Cancellazione fallita: appuntamento id={} non appartiene al cliente {}", appuntamentoId, emailCliente);
                             return notFound(appuntamentoId);
                         });
+                        
+        if (a.getDataOraInizio().isBefore(LocalDateTime.now().plusHours(24))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Non è possibile cancellare un appuntamento a meno di 24 ore dall'inizio");
+        }
+        
         a.setStato(StatoAppuntamento.CANCELLATO);
         log.info("Cliente {} ha cancellato l'appuntamento {}", emailCliente, appuntamentoId);
         return toResponse(appuntamentoRepository.save(a));
@@ -166,6 +188,15 @@ public class AppuntamentoService {
 
     public AppuntamentoResponse aggiornaStato(Long id, StatoAppuntamento nuovoStato) {
         Appuntamento a = appuntamentoRepository.findById(id).orElseThrow(() -> notFound(id));
+        
+        if (a.getStato() == StatoAppuntamento.CANCELLATO && nuovoStato != StatoAppuntamento.CANCELLATO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Non è possibile ripristinare un appuntamento cancellato");
+        }
+        
+        if (a.getStato() == StatoAppuntamento.COMPLETATO && nuovoStato != StatoAppuntamento.COMPLETATO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Non è possibile modificare lo stato di un appuntamento già completato");
+        }
+        
         log.info("Cambio stato appuntamento id={} da {} a {}", id, a.getStato(), nuovoStato);
         a.setStato(nuovoStato);
         return toResponse(appuntamentoRepository.save(a));
@@ -184,6 +215,16 @@ public class AppuntamentoService {
         if (!isSlotLibero(esistenti, inizio, durataMinuti, escludiId)) {
             log.warn("Conflitto di sovrapposizione: operatore={} alle {}", operatoreId, inizio);
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Lo slot per questo operatore è già occupato");
+        }
+    }
+
+    private void assertClienteLibero(Long clienteId, LocalDateTime inizio, int durataMinuti, Long escludiId) {
+        List<Appuntamento> esistenti = appuntamentoRepository.findByClienteIdNelPeriodoWithDetails(
+                        clienteId, inizio.minusHours(4), inizio.plusHours(4));
+        
+        if (!isSlotLibero(esistenti, inizio, durataMinuti, escludiId)) {
+            log.warn("Conflitto di sovrapposizione: cliente={} alle {}", clienteId, inizio);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Hai già un appuntamento prenotato in questo orario");
         }
     }
 

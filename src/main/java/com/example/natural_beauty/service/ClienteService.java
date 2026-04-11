@@ -3,7 +3,9 @@ package com.example.natural_beauty.service;
 import com.example.natural_beauty.dto.ClienteRequest;
 import com.example.natural_beauty.dto.ClienteResponse;
 import com.example.natural_beauty.model.Cliente;
+import com.example.natural_beauty.repository.AppuntamentoRepository;
 import com.example.natural_beauty.repository.ClienteRepository;
+import com.example.natural_beauty.repository.UtenteRepository;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,9 +17,13 @@ import org.springframework.web.server.ResponseStatusException;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final UtenteRepository utenteRepository;
+    private final AppuntamentoRepository appuntamentoRepository;
 
-    public ClienteService(ClienteRepository clienteRepository) {
+    public ClienteService(ClienteRepository clienteRepository, UtenteRepository utenteRepository, AppuntamentoRepository appuntamentoRepository) {
         this.clienteRepository = clienteRepository;
+        this.utenteRepository = utenteRepository;
+        this.appuntamentoRepository = appuntamentoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -49,15 +55,25 @@ public class ClienteService {
                         x -> {
                             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email già registrata");
                         });
+                        
+        String vecchiaEmail = c.getEmail();
         applica(c, request);
+        
+        if (!vecchiaEmail.equals(request.email())) {
+            utenteRepository.findByEmail(vecchiaEmail).ifPresent(u -> {
+                u.setEmail(request.email());
+                utenteRepository.save(u);
+            });
+        }
+        
         return toResponse(clienteRepository.save(c));
     }
 
     public void elimina(Long id) {
-        if (!clienteRepository.existsById(id)) {
-            throw notFound(id);
-        }
-        clienteRepository.deleteById(id);
+        Cliente c = clienteRepository.findById(id).orElseThrow(() -> notFound(id));
+        appuntamentoRepository.deleteByClienteId(c.getId());
+        clienteRepository.delete(c);
+        utenteRepository.findByEmail(c.getEmail()).ifPresent(utenteRepository::delete);
     }
 
     Cliente getEntity(Long id) {

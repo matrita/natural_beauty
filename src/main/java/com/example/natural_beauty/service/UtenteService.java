@@ -4,6 +4,7 @@ import com.example.natural_beauty.dto.CreaUtenteRequest;
 import com.example.natural_beauty.dto.UtenteResponse;
 import com.example.natural_beauty.model.Utente;
 import com.example.natural_beauty.model.UtenteRuolo;
+import com.example.natural_beauty.repository.AppuntamentoRepository;
 import com.example.natural_beauty.repository.ClienteRepository;
 import com.example.natural_beauty.repository.UtenteRepository;
 import java.util.Comparator;
@@ -20,12 +21,17 @@ public class UtenteService {
 
     private final UtenteRepository utenteRepository;
     private final ClienteRepository clienteRepository;
+    private final AppuntamentoRepository appuntamentoRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UtenteService(
-            UtenteRepository utenteRepository, ClienteRepository clienteRepository, PasswordEncoder passwordEncoder) {
+            UtenteRepository utenteRepository, 
+            ClienteRepository clienteRepository, 
+            AppuntamentoRepository appuntamentoRepository, 
+            PasswordEncoder passwordEncoder) {
         this.utenteRepository = utenteRepository;
         this.clienteRepository = clienteRepository;
+        this.appuntamentoRepository = appuntamentoRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -65,10 +71,14 @@ public class UtenteService {
     }
 
     public void elimina(Long id) {
-        if (!utenteRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-        utenteRepository.deleteById(id);
+        Utente u = utenteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        
+        clienteRepository.findByEmail(u.getEmail()).ifPresent(c -> {
+            appuntamentoRepository.deleteByClienteId(c.getId());
+            clienteRepository.delete(c);
+        });
+
+        utenteRepository.delete(u);
     }
 
     private UtenteResponse toResponse(Utente u) {

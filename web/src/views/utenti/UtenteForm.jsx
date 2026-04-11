@@ -12,10 +12,10 @@ export default function UtenteForm({ onSubmit }) {
     setForm((f) => ({ ...f, [name]: value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    onSubmit(form)
-    setForm(emptyForm)
+    const success = await onSubmit(form)
+    if (success) setForm(emptyForm)
   }
 
   return (

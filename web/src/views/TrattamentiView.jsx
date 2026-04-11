@@ -42,8 +42,10 @@ export default function TrattamentiView() {
       }
       setEditingItem(null)
       await load()
+      return true
     } catch (err) {
       setError(err)
+      return false
     }
   }
 

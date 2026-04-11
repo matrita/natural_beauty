@@ -31,8 +31,17 @@ public class TrattamentoController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Catalogo trattamenti", description = "Recupera la lista dei trattamenti offerti, filtrabile per stato attivo.")
     public List<TrattamentoResponse> elenco(
-            @RequestParam(required = false, defaultValue = "false") boolean soloAttivi) {
-        return soloAttivi ? trattamentoService.trovaAttivi() : trattamentoService.trovaTutti();
+            @RequestParam(required = false, defaultValue = "false") boolean soloAttivi,
+            org.springframework.security.core.Authentication authentication) {
+            
+        boolean isCliente = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("CLIENTE") || a.getAuthority().equals("ROLE_CLIENTE"));
+                
+        if (isCliente || soloAttivi) {
+            return trattamentoService.trovaAttivi();
+        }
+        
+        return trattamentoService.trovaTutti();
     }
 
     @GetMapping("/{id}")

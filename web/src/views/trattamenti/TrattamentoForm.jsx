@@ -20,15 +20,15 @@ export default function TrattamentoForm({ initialData = null, onSubmit, onCancel
     }
   }, [initialData])
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    onSubmit({
+    const success = await onSubmit({
       ...form,
       durataMinuti: Number(form.durataMinuti),
       prezzo: String(form.prezzo).replace(',', '.'),
       descrizione: form.descrizione || null,
     })
-    if (!editingId) setForm(emptyForm)
+    if (success && !editingId) setForm(emptyForm)
   }
 
   return (

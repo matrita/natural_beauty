@@ -30,8 +30,18 @@ public class OperatoreController {
     @GetMapping
     @PreAuthorize("isAuthenticated()") // Accessibile a tutti per prenotazioni
     @Operation(summary = "Elenco operatori", description = "Recupera la lista degli operatori. È possibile filtrare solo quelli attivi.")
-    public List<OperatoreResponse> elenco(@RequestParam(required = false, defaultValue = "false") boolean soloAttivi) {
-        return soloAttivi ? operatoreService.trovaAttivi() : operatoreService.trovaTutti();
+    public List<OperatoreResponse> elenco(
+            @RequestParam(required = false, defaultValue = "false") boolean soloAttivi,
+            org.springframework.security.core.Authentication authentication) {
+            
+        boolean isCliente = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("CLIENTE") || a.getAuthority().equals("ROLE_CLIENTE"));
+                
+        if (isCliente || soloAttivi) {
+            return operatoreService.trovaAttivi();
+        }
+        
+        return operatoreService.trovaTutti();
     }
 
     @GetMapping("/{id}")

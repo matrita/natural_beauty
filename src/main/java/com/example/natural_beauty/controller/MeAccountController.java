@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ public class MeAccountController {
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('CLIENTE')")
     @Operation(summary = "Cancella il mio account", description = "Elimina definitivamente l'utenza e tutti i dati associati (solo per CLIENTE).")
     public void cancella(@AuthenticationPrincipal UserDetails user) {
         log.warn("L'utente {} ha richiesto la cancellazione definitiva dell'account", user.getUsername());

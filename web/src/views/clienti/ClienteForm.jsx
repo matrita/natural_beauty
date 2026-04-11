@@ -21,14 +21,14 @@ export default function ClienteForm({ initialData = null, onSubmit, onCancel }) 
     }
   }, [initialData])
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    onSubmit({
+    const success = await onSubmit({
       ...form,
       telefono: form.telefono || null,
       note: form.note || null,
     })
-    if (!editingId) setForm(emptyForm)
+    if (success && !editingId) setForm(emptyForm)
   }
 
   function handleChange(e) {
