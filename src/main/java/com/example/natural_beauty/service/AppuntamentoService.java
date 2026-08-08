@@ -14,6 +14,7 @@ import java.time.LocalTime;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional
 public class AppuntamentoService {
+
+    @Value("${app.orario.apertura:09:00}")
+    private String orarioAperturaStr;
+
+    @Value("${app.orario.chiusura:18:00}")
+    private String orarioChiusuraStr;
 
     private static final Logger log = LoggerFactory.getLogger(AppuntamentoService.class);
     private final AppuntamentoRepository appuntamentoRepository;
@@ -71,7 +78,7 @@ public class AppuntamentoService {
     }
 
     private AppuntamentoResponse salvaNuovoAppuntamento(Cliente cliente, Long operatoreId, Long trattamentoId, LocalDateTime inizio, String note) {
-        var operatore = operatoreService.getEntity(operatoreId);
+        var operatore = operatoreService.getEntityWithLock(operatoreId);
         if (!operatore.isAttivo()) {
             log.warn("Tentativo di prenotazione con operatore non attivo: {}", operatoreId);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Operatore non attivo");
@@ -90,8 +97,8 @@ public class AppuntamentoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Il centro è chiuso di domenica");
         }
         
-        LocalDateTime aperturaGiorno = LocalDateTime.of(inizio.toLocalDate(), LocalTime.of(9, 0));
-        LocalDateTime chiusuraGiorno = LocalDateTime.of(inizio.toLocalDate(), LocalTime.of(18, 0));
+        LocalDateTime aperturaGiorno = LocalDateTime.of(inizio.toLocalDate(), LocalTime.parse(orarioAperturaStr));
+        LocalDateTime chiusuraGiorno = LocalDateTime.of(inizio.toLocalDate(), LocalTime.parse(orarioChiusuraStr));
         LocalDateTime fine = inizio.plusMinutes(trattamento.getDurataMinuti());
         
         if (inizio.isBefore(aperturaGiorno) || fine.isAfter(chiusuraGiorno)) {
@@ -167,8 +174,8 @@ public class AppuntamentoService {
 
     private List<LocalDateTime> calcolaSlotDisponibili(LocalDateTime start, LocalDateTime end, int durata, int step, List<Appuntamento> esistenti) {
         List<LocalDateTime> slots = new java.util.ArrayList<>();
-        LocalTime apertura = LocalTime.of(9, 0);
-        LocalTime chiusura = LocalTime.of(18, 0);
+        LocalTime apertura = LocalTime.parse(orarioAperturaStr);
+        LocalTime chiusura = LocalTime.parse(orarioChiusuraStr);
 
         for (LocalDate d = start.toLocalDate(); !d.isAfter(end.toLocalDate()); d = d.plusDays(1)) {
             if (d.getDayOfWeek() == DayOfWeek.SUNDAY) continue;

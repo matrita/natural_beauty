@@ -1,9 +1,8 @@
 import { clearToken, getToken } from '../auth/tokenStore'
 
 // Rilevamento ambiente
-const isNative = window.hasOwnProperty('Capacitor');
-// IP AGGIORNATO: 192.168.1.17
-const BASE_URL = isNative ? 'http://192.168.1.17:8080' : ''; 
+const isNative = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNative
+const BASE_URL = import.meta.env.VITE_API_URL || (isNative ? 'http://192.168.1.17:8080' : ''); 
 
 export class ApiError extends Error {
   constructor(message, status, payload) {

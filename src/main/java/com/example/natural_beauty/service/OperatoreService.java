@@ -58,6 +58,10 @@ public class OperatoreService {
         return operatoreRepository.findById(id).orElseThrow(() -> notFound(id));
     }
 
+    Operatore getEntityWithLock(Long id) {
+        return operatoreRepository.findByIdWithPessimisticWriteLock(id).orElseThrow(() -> notFound(id));
+    }
+
     private void applica(Operatore o, OperatoreRequest r) {
         o.setNome(r.nome());
         o.setCognome(r.cognome());

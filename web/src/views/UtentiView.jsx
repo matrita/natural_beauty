@@ -4,12 +4,14 @@ import ErrorAlert from '../ui/ErrorAlert'
 import UtenteForm from './utenti/UtenteForm'
 import { useFetch } from '../lib/useFetch'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import FeedbackModal from '../ui/FeedbackModal'
 
 const RUOLI_ALL = ['CLIENTE', 'STAFF', 'ADMIN']
 
 export default function UtentiView() {
   const { data: items, loading, error, setError, execute: load } = useFetch(utentiApi.listUtenti)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [feedback, setFeedback] = useState(null)
 
   async function handleCreate(formData) {
     setError(null)
@@ -30,6 +32,11 @@ export default function UtentiView() {
     try {
       await utentiApi.updateRuoloUtente(id, ruolo)
       await load()
+      setFeedback({
+        title: 'Ruolo aggiornato',
+        message: 'Il ruolo dell\'utente è stato aggiornato correttamente. Se hai modificato il tuo stesso ruolo, ricorda che devi effettuare un nuovo login affinché i cambiamenti abbiano effetto.',
+        type: 'success'
+      })
     } catch (e) {
       setError(e)
     }
@@ -58,6 +65,14 @@ export default function UtentiView() {
         danger
         onCancel={() => setItemToDelete(null)}
         onConfirm={confirmDelete}
+      />
+
+      <FeedbackModal
+        open={!!feedback}
+        title={feedback?.title}
+        message={feedback?.message}
+        type={feedback?.type}
+        onClose={() => setFeedback(null)}
       />
 
       <ErrorAlert error={error} onDismiss={() => setError(null)} />

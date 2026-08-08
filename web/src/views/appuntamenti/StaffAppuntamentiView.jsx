@@ -1,21 +1,24 @@
 import { useState, useCallback } from 'react'
 import * as appuntamentiApi from '../../api/appuntamentiApi'
-import { addDays, startOfDay, toDateTimeLocalValue } from '../../lib/dateUtils'
+import { toDateTimeLocalValue } from '../../lib/dateUtils'
 import ErrorAlert from '../../ui/ErrorAlert'
 import PeriodSelector from './PeriodSelector'
 import Input from '../../ui/Input'
 import { useAppuntamentiRefs } from './useAppuntamentiRefs'
 import { useFetch } from '../../lib/useFetch'
+import VisualCalendar from './VisualCalendar'
 
 const STATI = ['PRENOTATO', 'CONFERMATO', 'COMPLETATO', 'CANCELLATO']
 
 export default function StaffAppuntamentiView() {
-  const start = startOfDay()
-  const end = addDays(start, 7)
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
   const [da, setDa] = useState(toDateTimeLocalValue(start))
   const [a, setA] = useState(toDateTimeLocalValue(end))
 
-  const { clienti, operatori, trattamenti, error: refsError } = useAppuntamentiRefs()
+  const { clienti, operatori, trattamenti, orari, error: refsError } = useAppuntamentiRefs()
 
   // Stabilizziamo la funzione di fetch con useCallback
   const fetchAppuntamenti = useCallback(() => {
@@ -37,6 +40,8 @@ export default function StaffAppuntamentiView() {
     note: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [viewMode, setViewMode] = useState('calendar') // 'calendar' o 'list'
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -98,7 +103,7 @@ export default function StaffAppuntamentiView() {
         onDaChange={setDa}
         onAChange={setA}
         onReload={() => loadAppuntamenti()}
-        title="Periodo lista"
+        title="Periodo"
       />
 
       <form className="form-grid" onSubmit={handleCreate}>
@@ -143,10 +148,30 @@ export default function StaffAppuntamentiView() {
         </div>
       </form>
 
-      <div className="panel panel--inner">
-        <h3>Appuntamenti nel periodo</h3>
+      <div className="panel panel--inner" style={{ padding: '1rem', marginTop: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ margin: 0 }}>Appuntamenti nel periodo</h3>
+          <div className="tabs" style={{ marginBottom: 0 }}>
+            <button 
+              className={`tabs__btn ${viewMode === 'calendar' ? 'tabs__btn--active' : ''}`}
+              onClick={() => setViewMode('calendar')}
+              type="button"
+            >
+              Calendario
+            </button>
+            <button 
+              className={`tabs__btn ${viewMode === 'list' ? 'tabs__btn--active' : ''}`}
+              onClick={() => setViewMode('list')}
+              type="button"
+            >
+              Lista
+            </button>
+          </div>
+        </div>
+        
         {loading && <p className="muted">Caricamento…</p>}
-        {!loading && (
+        
+        {!loading && viewMode === 'list' && (
           <ul className="list list--appuntamenti">
             {items.length === 0 && <li className="muted">Nessun appuntamento.</li>}
             {items.map((ap) => (
@@ -164,6 +189,19 @@ export default function StaffAppuntamentiView() {
               </li>
             ))}
           </ul>
+        )}
+
+        {!loading && viewMode === 'calendar' && (
+          <VisualCalendar 
+            items={items} 
+            da={da} 
+            onDaChange={setDa}
+            onAChange={setA}
+            STATI={STATI} 
+            orari={orari}
+            onStatoChange={handleStatoChange} 
+            onDelete={handleDelete} 
+          />
         )}
       </div>
     </div>
