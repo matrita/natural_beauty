@@ -69,8 +69,8 @@ export default function ClientiView() {
         {loading && <p className="muted">Caricamento…</p>}
         {!loading && (
           <div className="list">
-            {items.length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun cliente registrato.</p>}
-            {items.map((c) => (
+            {(items || []).length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun cliente registrato.</p>}
+            {(items || []).map((c) => (
               <ClienteCard 
                 key={c.id} 
                 cliente={c} 

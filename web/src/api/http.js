@@ -46,7 +46,7 @@ export async function request(path, options = {}) {
     try {
       data = text ? JSON.parse(text) : null
     } catch (e) {
-      data = { message: "Errore di connessione o formato non valido" }
+      data = text ? { message: text } : null
     }
 
     const isLoginPath = path.includes('/auth/login')
@@ -58,7 +58,10 @@ export async function request(path, options = {}) {
     }
 
     if (!res.ok) {
-      throw new ApiError(data?.message || `HTTP ${res.status}`, res.status, data)
+      const errMsg = (typeof data?.message === 'string' && data.message)
+        ? data.message
+        : (typeof data === 'string' ? data : (text || `HTTP ${res.status}`))
+      throw new ApiError(errMsg, res.status, data)
     }
 
     return res.status === 204 ? null : data

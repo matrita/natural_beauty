@@ -105,8 +105,8 @@ export default function TrattamentiView() {
         {loading && <p className="muted">Caricamento in corso...</p>}
         {!loading && (
           <div className="list">
-            {items.length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun trattamento disponibile.</p>}
-            {items.map((t) => (
+            {(items || []).length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun trattamento disponibile.</p>}
+            {(items || []).map((t) => (
               <TrattamentoCard 
                 key={t.id}
                 trattamento={t}

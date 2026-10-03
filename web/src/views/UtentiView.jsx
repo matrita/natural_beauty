@@ -3,12 +3,14 @@ import * as utentiApi from '../api/utentiApi'
 import ErrorAlert from '../ui/ErrorAlert'
 import UtenteForm from './utenti/UtenteForm'
 import { useFetch } from '../lib/useFetch'
+import { useAuth } from '../context/AuthContext'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import FeedbackModal from '../ui/FeedbackModal'
 
 const RUOLI_ALL = ['CLIENTE', 'STAFF', 'ADMIN']
 
 export default function UtentiView() {
+  const { user } = useAuth()
   const { data: items, loading, error, setError, execute: load } = useFetch(utentiApi.listUtenti)
   const [itemToDelete, setItemToDelete] = useState(null)
   const [feedback, setFeedback] = useState(null)
@@ -86,14 +88,19 @@ export default function UtentiView() {
         {loading && <p className="muted">Caricamento…</p>}
         {!loading && (
           <div className="list">
-            {items.length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun utente registrato.</p>}
-            {items.map((u) => (
+            {(items || []).length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun utente registrato.</p>}
+            {(items || []).map((u) => (
               <div key={u.id} className="list-row" style={{ padding: '1.5rem 0' }}>
                 <div className="list-row__main" style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem', gap: '0.5rem' }}>
                     <span className="name" style={{ fontSize: '1.1rem', color: 'var(--brand)' }}>
                       {u.email}
                     </span>
+                    {u.email === user?.email && (
+                      <span className="badge" style={{ background: 'rgba(139, 168, 142, 0.15)', color: 'var(--brand)', fontWeight: 600, fontSize: '0.75rem' }}>
+                        Il tuo account
+                      </span>
+                    )}
                   </div>
                   <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>Ruolo:</span>
@@ -109,10 +116,16 @@ export default function UtentiView() {
                   </div>
                 </div>
                 
-                <div className="list-row__actions" style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn--small btn--danger" onClick={() => setItemToDelete(u)}>
-                    Elimina Account
-                  </button>
+                <div className="list-row__actions" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {u.email !== user?.email ? (
+                    <button type="button" className="btn btn--small btn--danger" onClick={() => setItemToDelete(u)}>
+                      Elimina Account
+                    </button>
+                  ) : (
+                    <span className="muted" style={{ fontSize: '0.8rem', fontStyle: 'italic' }}>
+                      In uso
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

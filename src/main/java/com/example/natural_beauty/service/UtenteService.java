@@ -61,6 +61,11 @@ public class UtenteService {
 
     public UtenteResponse aggiornaRuolo(Long id, UtenteRuolo ruolo) {
         Utente u = utenteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (u.getRuolo() == UtenteRuolo.ADMIN && ruolo != UtenteRuolo.ADMIN && utenteRepository.countByRuolo(UtenteRuolo.ADMIN) <= 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Impossibile revocare il ruolo all'unico amministratore di sistema");
+        }
         if (ruolo == UtenteRuolo.CLIENTE && !clienteRepository.existsByEmail(u.getEmail())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -72,6 +77,11 @@ public class UtenteService {
 
     public void elimina(Long id) {
         Utente u = utenteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (u.getRuolo() == UtenteRuolo.ADMIN && utenteRepository.countByRuolo(UtenteRuolo.ADMIN) <= 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Impossibile eliminare l'unico amministratore di sistema");
+        }
         
         clienteRepository.findByEmail(u.getEmail()).ifPresent(c -> {
             appuntamentoRepository.deleteByClienteId(c.getId());

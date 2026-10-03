@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import * as operatoriApi from '../api/operatoriApi'
 import ErrorAlert from '../ui/ErrorAlert'
 import OperatoreForm from './operatori/OperatoreForm'
@@ -7,7 +7,9 @@ import ConfirmDialog from '../ui/ConfirmDialog'
 import OperatoreCard from './operatori/OperatoreCard'
 
 export default function OperatoriView() {
-  const { data: items, loading, error, setError, execute: load } = useFetch(operatoriApi.listOperatori)
+  const [soloAttivi, setSoloAttivi] = useState(false)
+  const fetchOperatori = useCallback(() => operatoriApi.listOperatori({ soloAttivi }), [soloAttivi])
+  const { data: items, loading, error, setError, execute: load } = useFetch(fetchOperatori)
   const [editingItem, setEditingItem] = useState(null)
   const [itemToDelete, setItemToDelete] = useState(null)
 
@@ -54,6 +56,16 @@ export default function OperatoriView() {
         onConfirm={confirmDelete}
       />
 
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <p className="muted" style={{ fontSize: '0.9rem' }}>
+          Gestisci il team degli operatori del centro.
+        </p>
+        <label className="inline-check" style={{ marginBottom: 0 }}>
+          <input type="checkbox" checked={soloAttivi} onChange={(e) => setSoloAttivi(e.target.checked)} />
+          Filtra solo attivi
+        </label>
+      </div>
+
       <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
       <section className="panel" style={{ marginBottom: '2rem', background: '#fcfcfc' }}>
@@ -69,8 +81,8 @@ export default function OperatoriView() {
         {loading && <p className="muted">Caricamento…</p>}
         {!loading && (
           <div className="list">
-            {items.length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun operatore registrato.</p>}
-            {items.map((o) => (
+            {(items || []).length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun operatore registrato.</p>}
+            {(items || []).map((o) => (
               <OperatoreCard
                 key={o.id}
                 operatore={o}
