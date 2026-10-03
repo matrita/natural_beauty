@@ -53,7 +53,7 @@ export default function VisualCalendar({ items, da, onDaChange, onAChange, onSta
 
     calendarDays.grid.forEach(d => map.set(getDateString(d), []));
 
-    items.forEach(item => {
+    (items || []).forEach(item => {
       const itemDate = new Date(item.dataOraInizio);
       const dayKey = getDateString(itemDate);
       if (map.has(dayKey)) {

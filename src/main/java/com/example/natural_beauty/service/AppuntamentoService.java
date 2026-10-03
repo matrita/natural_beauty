@@ -105,7 +105,9 @@ public class AppuntamentoService {
         LocalDateTime fine = inizio.plusMinutes(trattamento.getDurataMinuti());
         
         if (inizio.isBefore(aperturaGiorno) || fine.isAfter(chiusuraGiorno)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'appuntamento deve essere compreso nell'orario lavorativo (09:00 - 18:00)");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format("L'appuntamento deve essere compreso nell'orario lavorativo (%s - %s)", orarioAperturaStr, orarioChiusuraStr));
         }
 
         appuntamentoValidator.assertSlotLibero(operatore.getId(), inizio, trattamento.getDurataMinuti(), null);

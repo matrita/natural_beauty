@@ -13,11 +13,12 @@ export default function OperatoreCard({ operatore, onEdit, onDelete }) {
           )}
         </div>
         <div className="meta" style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{operatore.email}</span>
-          {operatore.specializzazioni && (
+          {operatore.specializzazioni ? (
             <span style={{ fontStyle: 'italic', fontSize: '0.85rem' }}>
               ✨ {operatore.specializzazioni}
             </span>
+          ) : (
+            <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Nessuna specializzazione specificata</span>
           )}
         </div>
       </div>

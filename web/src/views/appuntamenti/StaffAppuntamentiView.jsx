@@ -173,8 +173,8 @@ export default function StaffAppuntamentiView() {
         
         {!loading && viewMode === 'list' && (
           <ul className="list list--appuntamenti">
-            {items.length === 0 && <li className="muted">Nessun appuntamento.</li>}
-            {items.map((ap) => (
+            {(items || []).length === 0 && <li className="muted">Nessun appuntamento.</li>}
+            {(items || []).map((ap) => (
               <li key={ap.id} className="list-row list-row--stack">
                 <div className="list-row__main">
                   <span className="name">{normalizeForDisplay(ap.dataOraInizio)} · {ap.trattamentoNome}</span>

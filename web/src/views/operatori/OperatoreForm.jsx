@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Input from '../../ui/Input'
 
-const emptyForm = { nome: '', cognome: '', email: '', specializzazioni: '', attivo: true }
+const emptyForm = { nome: '', cognome: '', specializzazioni: '', attivo: true }
 
 export default function OperatoreForm({ initialData = null, onSubmit, onCancel }) {
   const [form, setForm] = useState(emptyForm)
@@ -12,7 +12,6 @@ export default function OperatoreForm({ initialData = null, onSubmit, onCancel }
       setForm({
         nome: initialData.nome,
         cognome: initialData.cognome,
-        email: initialData.email,
         specializzazioni: initialData.specializzazioni ?? '',
         attivo: initialData.attivo,
       })
@@ -43,16 +42,7 @@ export default function OperatoreForm({ initialData = null, onSubmit, onCancel }
       <Input label="Nome" name="nome" required value={form.nome} onChange={handleChange} />
       <Input label="Cognome" name="cognome" required value={form.cognome} onChange={handleChange} />
       
-      {/* Email e Specializzazioni a tutta larghezza (100%) */}
-      <Input 
-        label="Email" 
-        name="email" 
-        type="email" 
-        required 
-        fullWidth={true} 
-        value={form.email} 
-        onChange={handleChange} 
-      />
+      {/* Specializzazioni a tutta larghezza (100%) */}
       <Input 
         label="Specializzazioni" 
         name="specializzazioni" 

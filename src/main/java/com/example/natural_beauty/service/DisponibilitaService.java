@@ -73,7 +73,7 @@ public class DisponibilitaService {
             LocalDateTime dayEnd = LocalDateTime.of(d, chiusura);
 
             while (!cursor.plusMinutes(durata).isAfter(dayEnd)) {
-                if (!cursor.isBefore(start) && !cursor.isAfter(end) && appuntamentoValidator.isSlotLibero(esistenti, cursor, durata, null)) {
+                if (!cursor.isBefore(start) && !cursor.plusMinutes(durata).isAfter(end) && appuntamentoValidator.isSlotLibero(esistenti, cursor, durata, null)) {
                     slots.add(cursor);
                 }
                 cursor = cursor.plusMinutes(step);

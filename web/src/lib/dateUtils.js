@@ -11,6 +11,12 @@ export function startOfDay(d = new Date()) {
   return x
 }
 
+export function endOfDay(d = new Date()) {
+  const x = new Date(d)
+  x.setHours(23, 59, 59, 999)
+  return x
+}
+
 export function addDays(d, n) {
   const x = new Date(d)
   x.setDate(x.getDate() + n)

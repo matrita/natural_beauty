@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import * as appuntamentiApi from '../../api/appuntamentiApi'
-import { addDays, startOfDay, toDateTimeLocalValue } from '../../lib/dateUtils'
+import { addDays, startOfDay, endOfDay, toDateTimeLocalValue } from '../../lib/dateUtils'
 import ErrorAlert from '../../ui/ErrorAlert'
 import ConfirmDialog from '../../ui/ConfirmDialog'
 import PeriodSelector from './PeriodSelector'
@@ -9,7 +9,7 @@ import { useFetch } from '../../lib/useFetch'
 
 export default function ClienteAppuntamentiView() {
   const start = startOfDay()
-  const end = addDays(start, 14)
+  const end = endOfDay(addDays(start, 13))
   const [da, setDa] = useState(toDateTimeLocalValue(start))
   const [a, setA] = useState(toDateTimeLocalValue(end))
 
