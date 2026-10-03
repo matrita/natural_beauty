@@ -2,7 +2,8 @@ import { clearToken, getToken } from '../auth/tokenStore'
 
 // Rilevamento ambiente
 const isNative = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNative
-const BASE_URL = import.meta.env.VITE_API_URL || (isNative ? 'http://192.168.1.17:8080' : ''); 
+// In native app we fallback to a default API URL or localhost if not set in VITE_API_URL
+const BASE_URL = import.meta.env.VITE_API_URL || ''; 
 
 export class ApiError extends Error {
   constructor(message, status, payload) {
@@ -64,7 +65,7 @@ export async function request(path, options = {}) {
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Connessione scaduta. Il PC (192.168.1.17) non risponde.');
+      throw new Error('Connessione scaduta. Il server non risponde.');
     }
     throw error;
   }

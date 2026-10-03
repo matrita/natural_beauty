@@ -4,6 +4,7 @@ import ErrorAlert from '../ui/ErrorAlert'
 import ClienteForm from './clienti/ClienteForm'
 import { useFetch } from '../lib/useFetch'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import ClienteCard from './clienti/ClienteCard'
 
 export default function ClientiView() {
   const { data: items, loading, error, setError, execute: load } = useFetch(clientiApi.listClienti)
@@ -70,35 +71,12 @@ export default function ClientiView() {
           <div className="list">
             {items.length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun cliente registrato.</p>}
             {items.map((c) => (
-              <div key={c.id} className="list-row" style={{ padding: '1.5rem 0' }}>
-                <div className="list-row__main" style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem' }}>
-                    <span className="name" style={{ fontSize: '1.15rem', color: 'var(--brand)' }}>
-                      {c.nome} {c.cognome}
-                    </span>
-                  </div>
-                  <div className="meta" style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                    <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>📧 {c.email}</span>
-                    {c.telefono && (
-                      <span style={{ fontSize: '0.85rem' }}>📞 {c.telefono}</span>
-                    )}
-                    {c.note && (
-                      <p style={{ fontStyle: 'italic', fontSize: '0.85rem', marginTop: '0.3rem', color: 'var(--muted)' }}>
-                        📝 {c.note}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="list-row__actions" style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn--small" onClick={() => setEditingItem(c)}>
-                    Modifica
-                  </button>
-                  <button type="button" className="btn btn--small btn--danger" onClick={() => setItemToDelete(c)}>
-                    Elimina
-                  </button>
-                </div>
-              </div>
+              <ClienteCard 
+                key={c.id} 
+                cliente={c} 
+                onEdit={setEditingItem} 
+                onDelete={setItemToDelete} 
+              />
             ))}
           </div>
         )}

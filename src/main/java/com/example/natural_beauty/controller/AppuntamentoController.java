@@ -4,6 +4,7 @@ import com.example.natural_beauty.dto.AggiornaStatoAppuntamentoRequest;
 import com.example.natural_beauty.dto.AppuntamentoRequest;
 import com.example.natural_beauty.dto.AppuntamentoResponse;
 import com.example.natural_beauty.service.AppuntamentoService;
+import com.example.natural_beauty.service.DisponibilitaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,9 +26,11 @@ public class AppuntamentoController {
 
     private static final Logger log = LoggerFactory.getLogger(AppuntamentoController.class);
     private final AppuntamentoService appuntamentoService;
+    private final DisponibilitaService disponibilitaService;
 
-    public AppuntamentoController(AppuntamentoService appuntamentoService) {
+    public AppuntamentoController(AppuntamentoService appuntamentoService, DisponibilitaService disponibilitaService) {
         this.appuntamentoService = appuntamentoService;
+        this.disponibilitaService = disponibilitaService;
     }
 
     @GetMapping
@@ -49,7 +52,7 @@ public class AppuntamentoController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime da,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime a,
             @RequestParam(required = false, defaultValue = "15") int stepMinuti) {
-        return appuntamentoService.disponibilita(operatoreId, trattamentoId, da, a, stepMinuti);
+        return disponibilitaService.disponibilita(operatoreId, trattamentoId, da, a, stepMinuti);
     }
 
     @GetMapping("/{id}")

@@ -4,6 +4,7 @@ import ErrorAlert from '../ui/ErrorAlert'
 import OperatoreForm from './operatori/OperatoreForm'
 import { useFetch } from '../lib/useFetch'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import OperatoreCard from './operatori/OperatoreCard'
 
 export default function OperatoriView() {
   const { data: items, loading, error, setError, execute: load } = useFetch(operatoriApi.listOperatori)
@@ -70,37 +71,12 @@ export default function OperatoriView() {
           <div className="list">
             {items.length === 0 && <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>Nessun operatore registrato.</p>}
             {items.map((o) => (
-              <div key={o.id} className="list-row" style={{ padding: '1.5rem 0' }}>
-                <div className="list-row__main" style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem' }}>
-                    <span className="name" style={{ fontSize: '1.15rem', color: 'var(--brand)' }}>
-                      {o.nome} {o.cognome}
-                    </span>
-                    {!o.attivo && (
-                      <span className="badge" style={{ background: '#ffebeb', color: '#d63031' }}>
-                        Non attivo
-                      </span>
-                    )}
-                  </div>
-                  <div className="meta" style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                    <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{o.email}</span>
-                    {o.specializzazioni && (
-                      <span style={{ fontStyle: 'italic', fontSize: '0.85rem' }}>
-                        ✨ {o.specializzazioni}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="list-row__actions" style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn--small" onClick={() => setEditingItem(o)}>
-                    Modifica
-                  </button>
-                  <button type="button" className="btn btn--small btn--danger" onClick={() => setItemToDelete(o)}>
-                    Elimina
-                  </button>
-                </div>
-              </div>
+              <OperatoreCard
+                key={o.id}
+                operatore={o}
+                onEdit={setEditingItem}
+                onDelete={setItemToDelete}
+              />
             ))}
           </div>
         )}

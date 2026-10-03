@@ -35,16 +35,19 @@ public class AppuntamentoService {
     private final ClienteService clienteService;
     private final OperatoreService operatoreService;
     private final TrattamentoService trattamentoService;
+    private final AppuntamentoValidator appuntamentoValidator;
 
     public AppuntamentoService(
             AppuntamentoRepository appuntamentoRepository,
             ClienteService clienteService,
             OperatoreService operatoreService,
-            TrattamentoService trattamentoService) {
+            TrattamentoService trattamentoService,
+            AppuntamentoValidator appuntamentoValidator) {
         this.appuntamentoRepository = appuntamentoRepository;
         this.clienteService = clienteService;
         this.operatoreService = operatoreService;
         this.trattamentoService = trattamentoService;
+        this.appuntamentoValidator = appuntamentoValidator;
     }
 
     @Transactional(readOnly = true)
@@ -105,8 +108,8 @@ public class AppuntamentoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'appuntamento deve essere compreso nell'orario lavorativo (09:00 - 18:00)");
         }
 
-        assertSlotLibero(operatore.getId(), inizio, trattamento.getDurataMinuti(), null);
-        assertClienteLibero(cliente.getId(), inizio, trattamento.getDurataMinuti(), null);
+        appuntamentoValidator.assertSlotLibero(operatore.getId(), inizio, trattamento.getDurataMinuti(), null);
+        appuntamentoValidator.assertClienteLibero(cliente.getId(), inizio, trattamento.getDurataMinuti(), null);
 
         Appuntamento a = new Appuntamento();
         a.setCliente(cliente);
@@ -150,48 +153,7 @@ public class AppuntamentoService {
         return toResponse(appuntamentoRepository.save(a));
     }
 
-    @Transactional(readOnly = true)
-    public List<LocalDateTime> disponibilita(
-            Long operatoreId, Long trattamentoId, LocalDateTime da, LocalDateTime a, int stepMinuti) {
-        validazioneParametriDisponibilita(da, a, stepMinuti);
-        
-        var operatore = operatoreService.getEntity(operatoreId);
-        if (!operatore.isAttivo()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Operatore non attivo");
-        var trattamento = trattamentoService.getEntity(trattamentoId);
-        if (!trattamento.isAttivo()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trattamento non attivo");
-
-        LocalDateTime start = da.isAfter(LocalDateTime.now()) ? da : LocalDateTime.now();
-        List<Appuntamento> esistenti = appuntamentoRepository.findByOperatoreIdAndDataOraInizioBetween(
-                operatoreId, start.minusDays(1), a.plusDays(1));
-
-        return calcolaSlotDisponibili(start, a, trattamento.getDurataMinuti(), stepMinuti, esistenti);
-    }
-
-    private void validazioneParametriDisponibilita(LocalDateTime da, LocalDateTime a, int stepMinuti) {
-        if (stepMinuti <= 0 || stepMinuti > 120) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "stepMinuti non valido");
-        if (!a.isAfter(da)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Intervallo non valido");
-    }
-
-    private List<LocalDateTime> calcolaSlotDisponibili(LocalDateTime start, LocalDateTime end, int durata, int step, List<Appuntamento> esistenti) {
-        List<LocalDateTime> slots = new java.util.ArrayList<>();
-        LocalTime apertura = LocalTime.parse(orarioAperturaStr);
-        LocalTime chiusura = LocalTime.parse(orarioChiusuraStr);
-
-        for (LocalDate d = start.toLocalDate(); !d.isAfter(end.toLocalDate()); d = d.plusDays(1)) {
-            if (d.getDayOfWeek() == DayOfWeek.SUNDAY) continue;
-
-            LocalDateTime cursor = LocalDateTime.of(d, apertura);
-            LocalDateTime dayEnd = LocalDateTime.of(d, chiusura);
-
-            while (!cursor.plusMinutes(durata).isAfter(dayEnd)) {
-                if (!cursor.isBefore(start) && !cursor.isAfter(end) && isSlotLibero(esistenti, cursor, durata, null)) {
-                    slots.add(cursor);
-                }
-                cursor = cursor.plusMinutes(step);
-            }
-        }
-        return slots;
-    }
+    // La logica di disponibilità è stata spostata in DisponibilitaService
 
     public AppuntamentoResponse aggiornaStato(Long id, StatoAppuntamento nuovoStato) {
         Appuntamento a = appuntamentoRepository.findById(id).orElseThrow(() -> notFound(id));
@@ -215,35 +177,7 @@ public class AppuntamentoService {
         appuntamentoRepository.deleteById(id);
     }
 
-    private void assertSlotLibero(Long operatoreId, LocalDateTime inizio, int durataMinuti, Long escludiId) {
-        List<Appuntamento> esistenti = appuntamentoRepository.findByOperatoreIdAndDataOraInizioBetween(
-                        operatoreId, inizio.minusHours(4), inizio.plusHours(4));
-        
-        if (!isSlotLibero(esistenti, inizio, durataMinuti, escludiId)) {
-            log.warn("Conflitto di sovrapposizione: operatore={} alle {}", operatoreId, inizio);
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Lo slot per questo operatore è già occupato");
-        }
-    }
-
-    private void assertClienteLibero(Long clienteId, LocalDateTime inizio, int durataMinuti, Long escludiId) {
-        List<Appuntamento> esistenti = appuntamentoRepository.findByClienteIdNelPeriodoWithDetails(
-                        clienteId, inizio.minusHours(4), inizio.plusHours(4));
-        
-        if (!isSlotLibero(esistenti, inizio, durataMinuti, escludiId)) {
-            log.warn("Conflitto di sovrapposizione: cliente={} alle {}", clienteId, inizio);
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Hai già un appuntamento prenotato in questo orario");
-        }
-    }
-
-    private boolean isSlotLibero(List<Appuntamento> esistenti, LocalDateTime inizio, int durataNuovo, Long escludiId) {
-        LocalDateTime fineNuovo = inizio.plusMinutes(durataNuovo);
-        for (Appuntamento e : esistenti) {
-            if (e.getStato() == StatoAppuntamento.CANCELLATO || (escludiId != null && escludiId.equals(e.getId()))) continue;
-            LocalDateTime fineEsistente = e.getDataOraInizio().plusMinutes(e.getTrattamento().getDurataMinuti());
-            if (inizio.isBefore(fineEsistente) && e.getDataOraInizio().isBefore(fineNuovo)) return false;
-        }
-        return true;
-    }
+    // I metodi assertSlotLibero, assertClienteLibero e isSlotLibero sono stati spostati in AppuntamentoValidator
 
     private AppuntamentoResponse toResponse(Appuntamento a) {
         return new AppuntamentoResponse(
